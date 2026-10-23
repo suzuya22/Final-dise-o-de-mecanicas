@@ -107,3 +107,10 @@ InitTestScene*.unity*
 
 # Auto-generated cache in Assets folder
 /[Aa]ssets/[Ss]ceneDependencyCache*
+
+# TextMesh Pro Examples & Extras (sample scenes, benchmarks and test assets)
+/[Aa]ssets/TextMesh Pro/Examples & Extras*
+
+# Raw UI source files and archives outside Assets
+/UI/
+*.zip
