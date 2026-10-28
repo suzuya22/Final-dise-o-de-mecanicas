@@ -1,9 +1,34 @@
 fileFormatVersion: 2
-guid: 370cb02acae4e4441a0a4c4711d23f5e
+guid: 8a60e7bc46490ed4b90733818a5b655f
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: antenas
+    second: {fileID: 2100000, guid: ecd8cc317982d5047a1d5737234af077, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: barandas
+    second: {fileID: 2100000, guid: d7436e1017fac5c4aadddc153539d1fb, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: barras de metal
+    second: {fileID: 2100000, guid: 44f4a2f69d0ad574db78681b355e29b2, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: chiva
+    second: {fileID: 2100000, guid: 7bd717ba1c6e70b4c80f9ef056c55d18, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: llantas
+    second: {fileID: 2100000, guid: 31070e65f33589d488ae68e301164e61, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0
