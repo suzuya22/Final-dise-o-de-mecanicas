@@ -9,6 +9,17 @@ public class PongCup : MonoBehaviour
     public int colorIndex;
     public bool tintRenderers = true;
 
+    [Header("Vaso de dos tonos")]
+    [Tooltip("Si está activo, el color de la paleta solo pinta el cuerpo; el labio y el interior quedan del Rim Color.")]
+    public bool keepRimWhite = true;
+    public Color rimColor = Color.white;
+    [Tooltip("Coordenada U de la textura donde termina el cuerpo y empieza el labio/interior (según las UV de Vaso.fbx).")]
+    [Range(0f, 1f)] public float rimSplitU = 0.6074f;
+
+    // Una textura por color, compartida entre todos los vasos.
+    static readonly System.Collections.Generic.Dictionary<Color, Texture2D> twoToneCache =
+        new System.Collections.Generic.Dictionary<Color, Texture2D>();
+
     [Header("Zona de detección")]
     [Tooltip("Trigger en el fondo del vaso. Si está vacío se crea uno automáticamente.")]
     public Collider detectionTrigger;
@@ -72,7 +83,51 @@ public class PongCup : MonoBehaviour
 
     public void ApplyColor(Color color)
     {
-        if (tintRenderers) BeerPongManager.Tint(GetComponentsInChildren<Renderer>(), color);
+        if (!tintRenderers) return;
+
+        if (!keepRimWhite)
+        {
+            BeerPongManager.Tint(GetComponentsInChildren<Renderer>(), color);
+            return;
+        }
+
+        // En vez de multiplicar todo el vaso por el color (lo que ensucia el blanco y oscurece el cuerpo),
+        // se cambia la textura por una de dos tonos: cuerpo del color de la paleta, labio e interior blancos.
+        var block = new MaterialPropertyBlock();
+        Texture2D tex = GetTwoToneTexture(color);
+        foreach (var r in GetComponentsInChildren<Renderer>())
+        {
+            r.GetPropertyBlock(block);
+            block.SetTexture("_BaseMap", tex);
+            block.SetTexture("_MainTex", tex);
+            block.SetColor("_BaseColor", Color.white);
+            block.SetColor("_Color", Color.white);
+            r.SetPropertyBlock(block);
+        }
+    }
+
+    Texture2D GetTwoToneTexture(Color bodyColor)
+    {
+        bodyColor.a = 1f;
+        if (twoToneCache.TryGetValue(bodyColor, out var cached) && cached != null) return cached;
+
+        // Las UV del vaso solo cambian de zona en U, así que basta una textura de una fila.
+        const int width = 2048;
+        // Sin mipmaps: así el corte entre color y blanco no se difumina al ver los vasos de lejos.
+        var tex = new Texture2D(width, 1, TextureFormat.RGBA32, false)
+        {
+            name = "VasoDosTonos",
+            wrapMode = TextureWrapMode.Clamp,
+            filterMode = FilterMode.Bilinear,
+        };
+        int split = Mathf.RoundToInt(rimSplitU * width);
+        var pixels = new Color32[width];
+        for (int x = 0; x < width; x++) pixels[x] = x < split ? bodyColor : rimColor;
+        tex.SetPixels32(pixels);
+        tex.Apply(false, true);
+
+        twoToneCache[bodyColor] = tex;
+        return tex;
     }
 
     public void Sink()
