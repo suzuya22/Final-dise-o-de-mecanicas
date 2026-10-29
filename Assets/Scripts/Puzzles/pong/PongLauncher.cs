@@ -50,6 +50,9 @@ public class PongLauncher : MonoBehaviour
         }
     }
 
+    // Lo controla el BeerPongManager: mientras es true no se puede apuntar ni tirar.
+    public bool InputLocked { get; set; }
+
     PongBall ball;
     bool dragging;
     Vector2 dragStart;
@@ -115,6 +118,14 @@ public class PongLauncher : MonoBehaviour
         if (ball == null || ball.Launched) return;
 
         ball.transform.SetPositionAndRotation(launchPoint.position, launchPoint.rotation);
+
+        // Bloqueado mientras los vasos se muestran y se mezclan.
+        if (InputLocked)
+        {
+            dragging = false;
+            trajectoryLine.enabled = false;
+            return;
+        }
 
         var mouse = Mouse.current;
         if (mouse == null) return;

@@ -45,6 +45,28 @@ public class BeerPongManager : MonoBehaviour
     [Range(0f, 1f)] public float drunkPerHit = 0.2f;
     [Tooltip("Al reiniciar la ronda, la borrachera vuelve al nivel con el que empezó.")]
     public bool resetDrunkOnRestart = true;
+    [Tooltip("Empujón lateral sobre la pelota en el aire con borrachera máxima (m/s²). 0 = sin efecto. La parábola no lo muestra.")]
+    public float drunkDrift = 3f;
+    [Tooltip("Qué tan rápido cambia de dirección el empujón.")]
+    public float drunkDriftFrequency = 1.5f;
+
+    [Header("Memoria")]
+    [Tooltip("Antes de cada tiro los vasos muestran su color, luego se vuelven todos del color oculto y se mezclan.")]
+    public bool memoryMode = true;
+    [Tooltip("Segundos que se ven los colores reales.")]
+    public float revealTime = 3f;
+    [Tooltip("Color de todos los vasos cuando se ocultan.")]
+    public Color hiddenColor = new Color(0.85f, 0.11f, 0.11f);
+    [Tooltip("Cuántos intercambios de dos vasos se hacen antes de cada tiro.")]
+    public int shuffleSwaps = 2;
+    [Tooltip("Segundos que dura cada intercambio.")]
+    public float swapDuration = 0.6f;
+    [Tooltip("Altura del saltito de los vasos al intercambiarse.")]
+    public float swapHop = 0.1f;
+    [Tooltip("Cuánto se separan de lado para rodearse al intercambiarse.")]
+    public float swapSideOffset = 0.15f;
+    [Tooltip("Segundos que un vaso muestra su color real al caer la pelota en él.")]
+    public float revealOnResult = 1f;
 
     [Header("Eventos")]
     public UnityEvent onCupHit;
@@ -58,11 +80,14 @@ public class BeerPongManager : MonoBehaviour
     public int Hits { get; private set; }
     public int BallsThrown { get; private set; }
     public bool IsFinished { get; private set; }
+    // Nivel de borrachera actual (0 a 1); la pelota lo usa para desviarse en el aire.
+    public float CurrentDrunk => drunkEffect != null ? drunkEffect.drunkLevel : 0f;
 
     PongBall currentBall;
     string lastMessage = "";
     float startDrunkLevel;
     bool initialized;
+    bool revealing;
 
     void Start()
     {
@@ -100,6 +125,7 @@ public class BeerPongManager : MonoBehaviour
     public void StartRound()
     {
         StopAllCoroutines();
+        revealing = false;
         if (currentBall != null) Destroy(currentBall.gameObject);
 
         Hits = 0;
@@ -116,10 +142,66 @@ public class BeerPongManager : MonoBehaviour
             cup.ApplyColor(GetColor(cup.colorIndex));
         }
 
-        SpawnNextBall();
+        StartCoroutine(NextBall());
     }
 
     public Color GetColor(int index) => palette[Mathf.Clamp(index, 0, palette.Length - 1)];
+
+    // Prepara el siguiente tiro: pelota nueva y, en modo memoria, mostrar colores -> ocultar -> mezclar.
+    IEnumerator NextBall()
+    {
+        SpawnNextBall();
+        if (currentBall == null || !memoryMode) yield break;
+
+        launcher.InputLocked = true;
+        var available = cups.FindAll(c => c.IsAvailable);
+
+        lastMessage = "Memoriza dónde está tu color...";
+        revealing = true;
+        foreach (var cup in available) cup.ApplyColor(GetColor(cup.colorIndex));
+        yield return new WaitForSeconds(revealTime);
+
+        revealing = false;
+        foreach (var cup in available) cup.ApplyColor(hiddenColor);
+
+        if (available.Count >= 2)
+        {
+            lastMessage = "¡Se mezclan!";
+            for (int s = 0; s < shuffleSwaps; s++)
+                yield return SwapRandomPair(available);
+        }
+
+        lastMessage = "¡Tira!";
+        launcher.InputLocked = false;
+    }
+
+    // Intercambia de sitio dos vasos al azar, deslizándose a la vez y rodeándose.
+    IEnumerator SwapRandomPair(List<PongCup> available)
+    {
+        int a = Random.Range(0, available.Count);
+        int b = Random.Range(0, available.Count - 1);
+        if (b >= a) b++;
+        PongCup cupA = available[a], cupB = available[b];
+
+        Vector3 posA = cupA.transform.position, posB = cupB.transform.position;
+        Vector3 dir = posB - posA;
+        dir.y = 0f;
+        Vector3 side = dir.sqrMagnitude > 0.0001f ? Vector3.Cross(Vector3.up, dir.normalized) * swapSideOffset : Vector3.zero;
+
+        var moveA = StartCoroutine(cupA.SlideTo(posB, swapDuration, swapHop, side));
+        var moveB = StartCoroutine(cupB.SlideTo(posA, swapDuration, swapHop, -side));
+        yield return moveA;
+        yield return moveB;
+    }
+
+    // Muestra un momento el color real de un vaso y vuelve a ocultarlo (si sigue en juego).
+    IEnumerator RevealCup(PongCup cup)
+    {
+        cup.ApplyColor(GetColor(cup.colorIndex));
+        yield return new WaitForSeconds(revealOnResult);
+        // Si ya empezó la siguiente fase de memoria, se deja con su color.
+        if (memoryMode && cup.IsAvailable && !revealing) cup.ApplyColor(hiddenColor);
+    }
 
     void SpawnNextBall()
     {
@@ -130,6 +212,7 @@ public class BeerPongManager : MonoBehaviour
         Transform point = launcher.LaunchPoint;
         currentBall = Instantiate(ballPrefab, point.position, point.rotation);
         currentBall.Init(this, colorIndex, GetColor(colorIndex));
+        launcher.InputLocked = false;
         launcher.SetBall(currentBall);
     }
 
@@ -147,6 +230,7 @@ public class BeerPongManager : MonoBehaviour
         if (cup != null && cup.IsAvailable && cup.colorIndex == ball.ColorIndex)
         {
             Hits++;
+            cup.ApplyColor(GetColor(cup.colorIndex));
             cup.Sink();
             if (drunkEffect != null)
                 drunkEffect.SetDrunkLevel(drunkEffect.drunkLevel + drunkPerHit);
@@ -156,6 +240,7 @@ public class BeerPongManager : MonoBehaviour
         else
         {
             lastMessage = cup != null ? "Vaso equivocado" : "Fallaste";
+            if (cup != null && cup.IsAvailable) StartCoroutine(RevealCup(cup));
             onMiss.Invoke();
         }
 
@@ -192,7 +277,7 @@ public class BeerPongManager : MonoBehaviour
         }
 
         yield return new WaitForSeconds(nextBallDelay);
-        SpawnNextBall();
+        yield return NextBall();
     }
 
     // Aplica un color a todos los renderers (funciona con URP Lit y con shaders clásicos).

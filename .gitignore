@@ -114,3 +114,8 @@ InitTestScene*.unity*
 # Raw UI source files and archives outside Assets
 /UI/
 *.zip
+
+
+# Herramientas de editor locales (tools)
+/[Aa]ssets/[Ee]ditor/
+/[Aa]ssets/[Ee]ditor.meta

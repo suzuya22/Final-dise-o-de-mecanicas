@@ -34,6 +34,31 @@ public class PongBall : MonoBehaviour
     float launchTime;
     float restTimer;
     bool finished;
+    bool inFlight;
+    float driftSeed;
+
+    // La borrachera tuerce el tiro: mientras vuela (hasta el primer rebote) recibe un empujón lateral
+    // suave que va cambiando de dirección, proporcional al nivel de borrachera.
+    void ApplyDrunkDrift()
+    {
+        if (!inFlight || manager == null || manager.drunkDrift <= 0f) return;
+
+        float level = manager.CurrentDrunk;
+        if (level <= 0f) return;
+
+        Vector3 flat = rb.linearVelocity;
+        flat.y = 0f;
+        if (flat.sqrMagnitude < 0.01f) return;
+
+        Vector3 lateral = Vector3.Cross(Vector3.up, flat.normalized);
+        float noise = Mathf.PerlinNoise(driftSeed, (Time.time - launchTime) * manager.drunkDriftFrequency) * 2f - 1f;
+        rb.AddForce(lateral * (noise * manager.drunkDrift * level), ForceMode.Acceleration);
+    }
+
+    void OnCollisionEnter(Collision collision)
+    {
+        inFlight = false;
+    }
 
     void Awake()
     {
@@ -82,11 +107,15 @@ public class PongBall : MonoBehaviour
         Launched = true;
         launchTime = Time.time;
         restTimer = 0f;
+        inFlight = true;
+        driftSeed = Random.Range(0f, 100f);
     }
 
     void FixedUpdate()
     {
         if (!Launched || finished) return;
+
+        ApplyDrunkDrift();
 
         if (transform.position.y < killHeight || Time.time - launchTime > maxLifetime)
         {

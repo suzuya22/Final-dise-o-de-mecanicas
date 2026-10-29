@@ -37,8 +37,14 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _ColorRes: 8
-    - _DitherSpread: 0.1
-    m_Colors: []
+    - _ColorRes: 24
+    - _Contrast: 1.04
+    - _DitherSpread: 0.025
+    - _PixelHeight: 420
+    - _Saturation: 1.12
+    - _TintStrength: 0.15
+    m_Colors:
+    - _HighlightTint: {r: 1, g: 0.97, b: 0.92, a: 1}
+    - _ShadowTint: {r: 0.18, g: 0.12, b: 0.3, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

@@ -32,10 +32,12 @@ public class PongCup : MonoBehaviour
     public bool IsAvailable { get; private set; } = true;
 
     Vector3 initialScale;
+    Vector3 initialPosition;
 
     void Awake()
     {
         initialScale = transform.localScale;
+        initialPosition = transform.localPosition;
         if (detectionTrigger == null) CreateDetectionTrigger();
     }
 
@@ -152,8 +154,24 @@ public class PongCup : MonoBehaviour
     {
         StopAllCoroutines();
         if (initialScale != Vector3.zero) transform.localScale = initialScale;
+        transform.localPosition = initialPosition;
         gameObject.SetActive(true);
         IsAvailable = true;
+    }
+
+    // Desliza el vaso hasta otra posición (al mezclar), con un pequeño salto y un rodeo lateral
+    // para no atravesar al vaso con el que se intercambia.
+    public IEnumerator SlideTo(Vector3 target, float duration, float hopHeight, Vector3 sideOffset)
+    {
+        Vector3 start = transform.position;
+        for (float t = 0f; t < duration; t += Time.deltaTime)
+        {
+            float k = Mathf.SmoothStep(0f, 1f, t / duration);
+            float arc = Mathf.Sin(k * Mathf.PI);
+            transform.position = Vector3.Lerp(start, target, k) + Vector3.up * (hopHeight * arc) + sideOffset * arc;
+            yield return null;
+        }
+        transform.position = target;
     }
 
     void OnDrawGizmosSelected()
