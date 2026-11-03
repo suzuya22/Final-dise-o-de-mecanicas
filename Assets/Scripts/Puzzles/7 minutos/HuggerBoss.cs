@@ -26,6 +26,15 @@ public class HuggerBoss : MonoBehaviour
     [Tooltip("Esquina donde se esconde al final.")]
     public Transform hidePoint;
 
+    [Header("Animación (opcional)")]
+    [Tooltip("Animator del Jefe.fbx. Si está vacío, el modelo cae por código como antes. " +
+             "Parámetros: IsWalking (bool), Fall y GetUp (triggers), FallVariant (int).")]
+    public Animator bossAnimator;
+    [Tooltip("Segundos que dura la animación de caerse antes de exponer los puntos débiles.")]
+    public float fallAnimTime = 0.6f;
+    [Tooltip("Segundos que dura la animación de levantarse.")]
+    public float getUpAnimTime = 1.4f;
+
     [Header("Acercarse")]
     public float approachSpeed = 0.7f;
     [Tooltip("Distancia a la que se queda abrazando (no se acerca más).")]
@@ -116,10 +125,13 @@ public class HuggerBoss : MonoBehaviour
             {
                 FacePlayer();
                 Vector3 toPlayer = Flat(player.transform.position - transform.position);
-                if (toPlayer.magnitude > hugDistance)
+                bool walking = toPlayer.magnitude > hugDistance;
+                if (walking)
                     transform.position += toPlayer.normalized * (approachSpeed * Time.deltaTime);
+                SetWalking(walking);
                 yield return null;
             }
+            SetWalking(false);
 
             // Amague: se inclina hacia un lado; a veces cambia al otro
             state = BossState.Telegraph;
@@ -167,7 +179,13 @@ public class HuggerBoss : MonoBehaviour
         state = BossState.Fallen;
         targetFall = 1f;
         onFall.Invoke();
-        yield return new WaitForSeconds(1f / fallSpeed);
+        SetWalking(false);
+        if (bossAnimator != null)
+        {
+            bossAnimator.SetInteger("FallVariant", Random.Range(0, 2));
+            bossAnimator.SetTrigger("Fall");
+        }
+        yield return new WaitForSeconds(bossAnimator != null ? fallAnimTime : 1f / fallSpeed);
 
         foreach (var wp in weakPoints)
             if (wp != null) wp.SetExposed(true);
@@ -181,7 +199,8 @@ public class HuggerBoss : MonoBehaviour
         if (Hits < hitsToWin)
         {
             targetFall = 0f;
-            yield return new WaitForSeconds(1f / fallSpeed);
+            if (bossAnimator != null) bossAnimator.SetTrigger("GetUp");
+            yield return new WaitForSeconds(bossAnimator != null ? getUpAnimTime : 1f / fallSpeed);
         }
     }
 
@@ -194,9 +213,11 @@ public class HuggerBoss : MonoBehaviour
 
         // Se levanta asustada y corre a esconderse en la esquina.
         targetFall = 0f;
-        yield return new WaitForSeconds(1f / fallSpeed);
+        if (bossAnimator != null) bossAnimator.SetTrigger("GetUp");
+        yield return new WaitForSeconds(bossAnimator != null ? getUpAnimTime : 1f / fallSpeed);
         if (hidePoint != null)
         {
+            SetWalking(true);
             while (Flat(hidePoint.position - transform.position).magnitude > 0.05f)
             {
                 Vector3 dir = Flat(hidePoint.position - transform.position);
@@ -206,6 +227,7 @@ public class HuggerBoss : MonoBehaviour
             }
             // Mira hacia la pared, de espaldas a la luz.
             transform.rotation = hidePoint.rotation;
+            SetWalking(false);
         }
         targetScale = cowerScale;
     }
@@ -249,7 +271,9 @@ public class HuggerBoss : MonoBehaviour
         currentScale = Mathf.Lerp(currentScale, targetScale, k);
 
         // Inclinación lateral en Z (amague) y caída hacia delante en X.
-        model.localRotation = modelBaseRotation * Quaternion.Euler(currentFall * fallAngle, 0f, -currentLean * leanAngle);
+        // Con Animator, la caída la hace la animación y el código solo inclina de lado.
+        float fallRot = bossAnimator != null ? 0f : currentFall * fallAngle;
+        model.localRotation = modelBaseRotation * Quaternion.Euler(fallRot, 0f, -currentLean * leanAngle);
         model.localScale = modelBaseScale * currentScale;
     }
 
@@ -261,6 +285,11 @@ public class HuggerBoss : MonoBehaviour
     }
 
     static Vector3 Flat(Vector3 v) { v.y = 0f; return v; }
+
+    void SetWalking(bool walking)
+    {
+        if (bossAnimator != null) bossAnimator.SetBool("IsWalking", walking);
+    }
 
     // Lo llama SevenMinutesPuzzle al reiniciar.
     public void ResetState()
@@ -274,6 +303,13 @@ public class HuggerBoss : MonoBehaviour
         targetFall = currentFall = 0f;
         targetScale = currentScale = 1f;
         UpdateModel();
+        if (bossAnimator != null)
+        {
+            bossAnimator.SetBool("IsWalking", false);
+            bossAnimator.ResetTrigger("Fall");
+            bossAnimator.ResetTrigger("GetUp");
+            bossAnimator.Play("Idle", 0, 0f);
+        }
 
         foreach (var wp in weakPoints)
             if (wp != null) wp.ResetState();

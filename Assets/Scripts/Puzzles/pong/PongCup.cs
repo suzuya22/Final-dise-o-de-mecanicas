@@ -31,14 +31,37 @@ public class PongCup : MonoBehaviour
 
     public bool IsAvailable { get; private set; } = true;
 
+    // Medidas del vaso de pie (en el mundo), para colocarlo en una pirámide.
+    public float Width { get; private set; }
+    public float Height { get; private set; }
+    // Distancia del pivote a la base del vaso.
+    public float PivotToBase { get; private set; }
+    // Con física activa (evento de la pirámide) el vaso es un Rigidbody que se puede derribar.
+    public bool PhysicsActive => body != null;
+
     Vector3 initialScale;
     Vector3 initialPosition;
+    Rigidbody body;
+    Coroutine benchRoutine;
 
     void Awake()
     {
         initialScale = transform.localScale;
         initialPosition = transform.localPosition;
         if (detectionTrigger == null) CreateDetectionTrigger();
+        MeasureSize();
+    }
+
+    // Mide el vaso de pie (se llama al empezar; también se puede llamar a mano tras moverlo).
+    public void MeasureSize()
+    {
+        var renderers = GetComponentsInChildren<Renderer>();
+        if (renderers.Length == 0) return;
+        Bounds b = renderers[0].bounds;
+        foreach (var r in renderers) b.Encapsulate(r.bounds);
+        Width = Mathf.Max(b.size.x, b.size.z);
+        Height = b.size.y;
+        PivotToBase = transform.position.y - b.min.y;
     }
 
     // Se ejecuta al añadir el componente en el editor: deja las colisiones guardadas en la escena.
@@ -81,6 +104,41 @@ public class PongCup : MonoBehaviour
         box.isTrigger = true;
         box.size = new Vector3(b.size.x * triggerWidth01, b.size.y * triggerHeight01, b.size.z * triggerWidth01);
         detectionTrigger = box;
+    }
+
+    // Zona donde la pelota cuenta como encestada: una caja centrada en el eje del vaso, desde el fondo hasta un poco
+    // por encima del borde. Un trigger solo en el fondo era demasiado exigente: la pelota rebotaba en el aro y no
+    // llegaba (con él solo contaban los tiros a menos de ~4 cm del centro; con esta zona, ~13 cm de ancho).
+    public void SetCatchZone(float width, float aboveRim)
+    {
+        var box = detectionTrigger as BoxCollider;
+        if (box == null) return;
+
+        var renderers = GetComponentsInChildren<Renderer>();
+        if (renderers.Length == 0) return;
+        Bounds b = renderers[0].bounds;
+        foreach (var r in renderers) b.Encapsulate(r.bounds);
+
+        float y0 = b.min.y + b.size.y * 0.2f;           // justo sobre el suelo interior
+        float y1 = b.max.y + Mathf.Max(0f, aboveRim);   // un poco sobre el borde
+        box.transform.rotation = Quaternion.identity;
+        box.transform.position = new Vector3(b.center.x, (y0 + y1) * 0.5f, b.center.z);
+        box.center = Vector3.zero;
+        Vector3 s = box.transform.lossyScale;
+        box.size = new Vector3(width / s.x, (y1 - y0) / s.y, width / s.z);
+    }
+
+    // Un punto dentro del vaso, cerca del fondo (adonde cae la pelota que encesta).
+    public Vector3 InsidePoint
+    {
+        get
+        {
+            var renderers = GetComponentsInChildren<Renderer>();
+            if (renderers.Length == 0) return transform.position;
+            Bounds b = renderers[0].bounds;
+            foreach (var r in renderers) b.Encapsulate(r.bounds);
+            return new Vector3(b.center.x, b.min.y + b.size.y * 0.3f, b.center.z);
+        }
     }
 
     public void ApplyColor(Color color)
@@ -153,6 +211,8 @@ public class PongCup : MonoBehaviour
     public void ResetCup()
     {
         StopAllCoroutines();
+        benchRoutine = null;
+        DisablePhysics();
         if (initialScale != Vector3.zero) transform.localScale = initialScale;
         transform.localPosition = initialPosition;
         gameObject.SetActive(true);
@@ -172,6 +232,106 @@ public class PongCup : MonoBehaviour
             yield return null;
         }
         transform.position = target;
+    }
+
+    // ---- Evento de la pirámide: el vaso pasa a ser un objeto con física que se puede derribar.
+
+    // Mientras está activa, el cuerpo del vaso es un casco convexo (sólido) y el trigger de detección se apaga.
+    // Empieza en modo cinemático (para colocarlo); Release() lo suelta.
+    public void EnablePhysics(float mass, float linearDamping, float angularDamping, PhysicsMaterial material)
+    {
+        if (body != null) return;
+
+        foreach (var mc in GetComponentsInChildren<MeshCollider>(true))
+        {
+            mc.convex = true;
+            mc.sharedMaterial = material;
+        }
+        if (detectionTrigger != null) detectionTrigger.enabled = false;
+
+        body = gameObject.AddComponent<Rigidbody>();
+        body.mass = mass;
+        body.linearDamping = linearDamping;
+        body.angularDamping = angularDamping;
+        body.interpolation = RigidbodyInterpolation.Interpolate;
+        body.collisionDetectionMode = CollisionDetectionMode.Continuous;
+        body.isKinematic = true;
+    }
+
+    public void Release()
+    {
+        if (body != null) body.isKinematic = false;
+    }
+
+    public void DisablePhysics()
+    {
+        if (body != null)
+        {
+            body.isKinematic = true;
+            Destroy(body);
+            body = null;
+        }
+        foreach (var mc in GetComponentsInChildren<MeshCollider>(true))
+        {
+            mc.convex = false;
+            mc.sharedMaterial = null;
+        }
+        if (detectionTrigger != null) detectionTrigger.enabled = true;
+    }
+
+    // Quieto del todo (o dormido): se puede evaluar si cayó.
+    public bool IsSettled =>
+        body == null || body.isKinematic || body.IsSleeping() ||
+        (body.linearVelocity.sqrMagnitude < 0.0004f && body.angularVelocity.sqrMagnitude < 0.01f);
+
+    // Está derribado si se inclinó mucho o se movió bastante de su sitio en la pirámide.
+    public bool IsKnocked(Vector3 slotPosition, float distanceThreshold)
+    {
+        float tilt = Vector3.Angle(transform.up, Vector3.up);
+        return tilt > 40f || (transform.position - slotPosition).sqrMagnitude > distanceThreshold * distanceThreshold;
+    }
+
+    // Va a una posición y giro concretos (para formar la pirámide y para volver a su sitio después).
+    public IEnumerator SlideToPose(Vector3 target, Quaternion targetRotation, float duration, float hopHeight)
+    {
+        Vector3 start = transform.position;
+        Quaternion startRotation = transform.rotation;
+        for (float t = 0f; t < duration; t += Time.deltaTime)
+        {
+            float k = Mathf.SmoothStep(0f, 1f, t / duration);
+            transform.position = Vector3.Lerp(start, target, k) + Vector3.up * (hopHeight * Mathf.Sin(k * Mathf.PI));
+            transform.rotation = Quaternion.Slerp(startRotation, targetRotation, k);
+            yield return null;
+        }
+        transform.SetPositionAndRotation(target, targetRotation);
+    }
+
+    // Se encoge y desaparece (se aparta mientras dura el evento)...
+    public void Bench(float duration)
+    {
+        if (benchRoutine != null) StopCoroutine(benchRoutine);
+        benchRoutine = StartCoroutine(ScaleRoutine(Vector3.zero, duration, true));
+    }
+
+    // ...y vuelve a crecer en su sitio.
+    public void Unbench(float duration)
+    {
+        if (benchRoutine != null) StopCoroutine(benchRoutine);
+        gameObject.SetActive(true);
+        benchRoutine = StartCoroutine(ScaleRoutine(initialScale, duration, false));
+    }
+
+    IEnumerator ScaleRoutine(Vector3 target, float duration, bool hideAtEnd)
+    {
+        Vector3 start = transform.localScale;
+        for (float t = 0f; t < duration; t += Time.deltaTime)
+        {
+            transform.localScale = Vector3.Lerp(start, target, Mathf.SmoothStep(0f, 1f, t / duration));
+            yield return null;
+        }
+        transform.localScale = target;
+        if (hideAtEnd) gameObject.SetActive(false);
+        benchRoutine = null;
     }
 
     void OnDrawGizmosSelected()

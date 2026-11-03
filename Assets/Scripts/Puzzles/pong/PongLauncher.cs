@@ -36,6 +36,11 @@ public class PongLauncher : MonoBehaviour
 
     [Header("Parábola")]
     public int maxPoints = 60;
+    [Tooltip("Rebotes que se ven en la línea: 1 = la línea sigue tras el primer rebote y se corta en el segundo. " +
+             "0 = se corta en el primer choque.")]
+    public int visibleBounces = 1;
+    [Tooltip("Puntos extra de línea disponibles después del primer rebote.")]
+    public int maxPointsAfterBounce = 40;
     public float timeStep = 0.03f;
     public LayerMask trajectoryMask = ~0;
     public float lineWidth = 0.01f;
@@ -63,7 +68,7 @@ public class PongLauncher : MonoBehaviour
         if (launchPoint == null) CreateLaunchPoint();
         if (trajectoryLine == null) trajectoryLine = gameObject.AddComponent<LineRenderer>();
         SetupLine();
-        points = new Vector3[maxPoints];
+        points = new Vector3[maxPoints + Mathf.Max(0, maxPointsAfterBounce) * Mathf.Max(0, visibleBounces) + 2];
         trajectoryLine.enabled = false;
     }
 
@@ -200,22 +205,41 @@ public class PongLauncher : MonoBehaviour
     void DrawTrajectory(Vector3 start, Vector3 velocity)
     {
         Vector3 gravity = Physics.gravity;
-        int count = 1;
-        points[0] = start;
+        float bounciness = manager != null && manager.ballPrefab != null ? manager.ballPrefab.bounciness : 0.8f;
 
-        for (int i = 1; i < maxPoints; i++)
+        int count = 0;
+        points[count++] = start;
+        Vector3 pos = start, vel = velocity;
+        int bounces = 0;
+        int budget = maxPoints;
+
+        // La línea sigue el vuelo de la pelota; en cada choque (mesa, vaso...) el siguiente tramo sale rebotado.
+        // Se dibujan 'visibleBounces' rebotes y la línea se corta en el choque siguiente.
+        while (budget > 0 && count < points.Length)
         {
-            float t = i * timeStep;
-            Vector3 p = start + velocity * t + 0.5f * t * t * gravity;
+            budget--;
+            Vector3 next = pos + vel * timeStep + 0.5f * timeStep * timeStep * gravity;
+            Vector3 segment = next - pos;
 
-            // Corta la línea donde choca con algo (mesa, vaso...).
-            if (Physics.Linecast(points[i - 1], p, out RaycastHit hit, trajectoryMask, QueryTriggerInteraction.Ignore))
+            if (Physics.Linecast(pos, next, out RaycastHit hit, trajectoryMask, QueryTriggerInteraction.Ignore))
             {
                 points[count++] = hit.point;
-                break;
+                if (bounces >= visibleBounces) break;
+                bounces++;
+
+                // Velocidad en el instante del choque y rebote: pierde la parte normal según el rebote de la pelota.
+                float fraction = segment.sqrMagnitude > 1e-8f ? hit.distance / segment.magnitude : 0f;
+                Vector3 hitVel = vel + gravity * (timeStep * fraction);
+                Vector3 normalPart = Vector3.Project(hitVel, hit.normal);
+                vel = (hitVel - normalPart) - normalPart * bounciness;
+                pos = hit.point + hit.normal * 0.002f;
+                budget += maxPointsAfterBounce; // después del rebote hay más línea disponible
+                continue;
             }
 
-            points[count++] = p;
+            vel += gravity * timeStep;
+            pos = next;
+            points[count++] = pos;
         }
 
         trajectoryLine.positionCount = count;

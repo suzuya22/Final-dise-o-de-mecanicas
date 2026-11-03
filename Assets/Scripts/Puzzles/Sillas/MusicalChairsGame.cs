@@ -73,7 +73,41 @@ public class MusicalChairsGame : MonoBehaviour
     [Tooltip("Parte de la penalización que se puede evitar acertando todas las pulsaciones (0.75 = 75 %).")]
     [Range(0f, 1f)] public float maxPenaltyReduction = 0.75f;
 
+    [Header("Dificultad por ronda")]
+    [Tooltip("Cuánto sube la velocidad de los NPC en cada ronda (0.15 = +15 % por ronda).")]
+    public float npcSpeedPerRound = 0.15f;
+    [Tooltip("Tope del multiplicador de velocidad de los NPC.")]
+    public float maxNpcSpeedMultiplier = 2f;
+
+    [Header("Sillas giratorias")]
+    [Tooltip("Desde qué ronda giran las sillas (3 = tras la segunda). 0 = nunca.")]
+    public int rotateChairsFromRound = 3;
+    [Tooltip("Grados por segundo en la primera ronda en que giran.")]
+    public float chairRotationSpeed = 25f;
+    [Tooltip("Grados por segundo extra en cada ronda siguiente.")]
+    public float chairRotationPerRound = 6f;
+    [Tooltip("Giran en sentido contrario a quienes caminan. Solo giran mientras suena la música.")]
+    public bool chairsSpinAgainstWalkers = true;
+
+    [Header("Apagón")]
+    [Tooltip("Efecto de luz (opcional). Vacío = sin apagones.")]
+    public ChairsBlackout blackout;
+    [Tooltip("Desde qué ronda puede haber apagón.")]
+    public int blackoutFromRound = 2;
+    [Tooltip("Probabilidad de apagón en cada ronda desde esa.")]
+    [Range(0f, 1f)] public float blackoutChance = 0.6f;
+    [Tooltip("Segundos a oscuras (mínimo 5). Si hace falta, la música dura más para que quepa.")]
+    [Min(5f)] public float blackoutDuration = 5f;
+
+    [Header("Cambio de lugares")]
+    [Tooltip("Desde qué ronda puede haber cambio de lugares. 0 = nunca.")]
+    public int swapFromRound = 3;
+    [Tooltip("Probabilidad de cambio de lugares en cada ronda desde esa.")]
+    [Range(0f, 1f)] public float swapChance = 0.5f;
+
     [Header("UI (opcional)")]
+    [Tooltip("Color de la tecla a pulsar en el texto, para que resalte.")]
+    public Color keyColor = new Color(1f, 0.45f, 0.82f);
     public TMP_Text hudText;
     [Tooltip("Image con Image Type = Filled para la barra del QTE.")]
     public Image hudFill;
@@ -100,13 +134,44 @@ public class MusicalChairsGame : MonoBehaviour
     int round;
     float graceUntil;
     string message = "";
+    bool spinning;
+    bool inBlackout;
+    const string MsgBlackout = "¡Se fue la luz!";
+    const string MsgSwap = "¡Cambio de lugares!";
+    float chairSpeedNow;
+    Vector3[] chairHomePosition;
+    Quaternion[] chairHomeRotation;
 
     void Awake()
     {
         mash = GetComponent<MashQTE>();
         timing = GetComponent<TimingQTE>();
+        chairHomePosition = new Vector3[chairs.Length];
+        chairHomeRotation = new Quaternion[chairs.Length];
+        for (int i = 0; i < chairs.Length; i++)
+        {
+            if (chairs[i] == null) continue;
+            chairs[i].Init(this);
+            chairHomePosition[i] = chairs[i].transform.position;
+            chairHomeRotation[i] = chairs[i].transform.rotation;
+        }
+    }
+
+    // Las sillas vuelven a su sitio original (tras haber girado).
+    void ResetChairsToHome()
+    {
+        for (int i = 0; i < chairs.Length; i++)
+            if (chairs[i] != null) chairs[i].transform.SetPositionAndRotation(chairHomePosition[i], chairHomeRotation[i]);
+    }
+
+    // Las sillas giran como un anillo alrededor del centro (llevan su Seat Point con ellas).
+    void RotateChairs()
+    {
+        // Girar en Y con signo positivo es sentido horario, el contrario a un ángulo que crece.
+        float sign = chairsSpinAgainstWalkers ? Direction : -Direction;
+        float degrees = chairSpeedNow * sign * Time.deltaTime;
         foreach (var c in chairs)
-            if (c != null) c.Init(this);
+            if (c != null && c.gameObject.activeSelf) c.transform.RotateAround(Center, Vector3.up, degrees);
     }
 
     void Start()
@@ -133,6 +198,8 @@ public class MusicalChairsGame : MonoBehaviour
         var activeNpcs = new List<ChairNPC>();
         foreach (var n in npcs) if (n != null) activeNpcs.Add(n);
         int chairsNeeded = activeNpcs.Count; // participantes (NPCs + jugador) - 1
+        ResetChairsToHome();
+        if (blackout != null) blackout.Cancel();
         for (int i = 0; i < chairs.Length; i++)
         {
             if (chairs[i] == null) continue;
@@ -156,7 +223,15 @@ public class MusicalChairsGame : MonoBehaviour
             // ---- Música
             round++;
             phase = Phase.Music;
-            message = $"Ronda {round}: ¡camina en la fila!";
+
+            // Cada ronda es más difícil: los NPC van más rápido y, pasada cierta ronda, las sillas giran.
+            float speedMul = Mathf.Min(maxNpcSpeedMultiplier, 1f + npcSpeedPerRound * (round - 1));
+            foreach (var n in activeNpcs) n.speedMultiplier = speedMul;
+            spinning = rotateChairsFromRound > 0 && round >= rotateChairsFromRound && chairRotationSpeed > 0f;
+            chairSpeedNow = chairRotationSpeed + chairRotationPerRound * Mathf.Max(0, round - rotateChairsFromRound);
+
+            string roundMessage = $"Ronda {round}: ¡camina en la fila!" + (spinning ? " ¡Las sillas giran!" : "");
+            message = roundMessage;
             graceUntil = Time.time + returnGrace;
             foreach (var n in activeNpcs) n.StartCircling();
             if (music != null)
@@ -166,9 +241,53 @@ public class MusicalChairsGame : MonoBehaviour
                 else music.UnPause();
             }
             onRoundStart.Invoke();
-            yield return new WaitForSeconds(Random.Range(musicTime.x, musicTime.y));
+            float musicDuration = Random.Range(musicTime.x, musicTime.y);
+            bool doBlackout = blackout != null && round >= blackoutFromRound && Random.value < blackoutChance;
+            bool doSwap = swapFromRound > 0 && round >= swapFromRound && Random.value < swapChance && activeNpcs.Count > 0;
+            // El apagón necesita su tiempo: si hace falta, la música dura más.
+            if (doBlackout) musicDuration = Mathf.Max(musicDuration, blackoutDuration + 3f);
 
-            // ---- Para la música: a por las sillas
+            // Eventos de la ronda en un momento al azar de la música: (segundo, tipo).
+            // Tipos: 0 = empieza el apagón, 1 = acaba el apagón, 2 = cambio de lugares.
+            var timeline = new List<KeyValuePair<float, int>>();
+            if (doBlackout)
+            {
+                float start = Random.Range(0.1f, 0.5f) * (musicDuration - blackoutDuration);
+                timeline.Add(new KeyValuePair<float, int>(start, 0));
+                timeline.Add(new KeyValuePair<float, int>(start + blackoutDuration, 1));
+            }
+            if (doSwap) timeline.Add(new KeyValuePair<float, int>(Random.Range(0.2f, 0.85f) * musicDuration, 2));
+            timeline.Sort((a, b) => a.Key.CompareTo(b.Key));
+
+            float clock = 0f;
+            foreach (var ev in timeline)
+            {
+                if (ev.Key >= musicDuration) break;
+                yield return new WaitForSeconds(Mathf.Max(0f, ev.Key - clock));
+                clock = Mathf.Max(clock, ev.Key);
+                if (ev.Value == 0)
+                {
+                    inBlackout = true;
+                    message = MsgBlackout;
+                    blackout.Trigger(blackoutDuration);
+                }
+                else if (ev.Value == 1)
+                {
+                    inBlackout = false;
+                    if (message == MsgBlackout) message = roundMessage;
+                }
+                else
+                {
+                    message = MsgSwap;
+                    if (blackout != null) blackout.Blink(() => SwapPlaces(activeNpcs));
+                    else SwapPlaces(activeNpcs);
+                    StartCoroutine(RestoreMessage(1.4f, roundMessage));
+                }
+            }
+            if (clock < musicDuration) yield return new WaitForSeconds(musicDuration - clock);
+
+            // ---- Para la música: a por las sillas (las sillas dejan de girar)
+            spinning = false;
             if (music != null) music.Pause();
             phase = Phase.Rush;
             message = "¡Siéntate! (E junto a una silla libre)";
@@ -221,6 +340,35 @@ public class MusicalChairsGame : MonoBehaviour
 
             yield return new WaitForSeconds(1f);
         }
+    }
+
+    // El jugador y los NPC se reparten los puestos del círculo entre ellos: nadie se queda donde estaba.
+    void SwapPlaces(List<ChairNPC> participants)
+    {
+        int n = participants.Count + 1;
+        if (n < 2 || phase != Phase.Music) return;
+
+        var angles = new float[n];
+        Vector3 offset = player.transform.position - Center;
+        angles[0] = Mathf.Atan2(offset.z, offset.x);
+        for (int i = 0; i < participants.Count; i++) angles[i + 1] = participants[i].CurrentAngle;
+
+        // Desplazar los puestos un número de lugares entre 1 y n-1 garantiza que todos cambien.
+        int shift = Random.Range(1, n);
+        float a = angles[shift % n];
+        player.Teleport(RingPoint(a), Quaternion.LookRotation(RingTangent(a), Vector3.up));
+        for (int i = 0; i < participants.Count; i++)
+            participants[i].PlaceOnRing(angles[(i + 1 + shift) % n]);
+
+        graceUntil = Time.time + 1.5f; // un momento para reubicarse sin perder cordura
+    }
+
+    // Quita el aviso del cambio de lugares: vuelve al del apagón si sigue a oscuras, o al de la ronda.
+    IEnumerator RestoreMessage(float delay, string roundMessage)
+    {
+        yield return new WaitForSeconds(delay);
+        if (phase == Phase.Music && message == MsgSwap)
+            message = inBlackout ? MsgBlackout : roundMessage;
     }
 
     IEnumerator LoseSequence()
@@ -325,6 +473,8 @@ public class MusicalChairsGame : MonoBehaviour
 
     void Update()
     {
+        if (phase == Phase.Music && spinning) RotateChairs();
+
         if (phase != Phase.Music || player == null || sanity == null || Time.time < graceUntil) return;
 
         // Fuera de la fila
@@ -394,21 +544,28 @@ public class MusicalChairsGame : MonoBehaviour
 
     // ---- HUD
 
-    string HudLine()
+    // rich = true para TextMeshPro (la tecla sale grande y de color); false para el HUD de debug de OnGUI.
+    string HudLine(bool rich = false)
     {
         if (phase == Phase.Biting && mash.IsRunning)
-            return $"{message}\nPulsa [{mash.CurrentKey}] rápido: {mash.Presses}/{mash.pressesNeeded}  ({mash.TimeLeft:F1}s)";
+            return $"{message}\nPulsa {Key(mash.CurrentKey, rich)} rápido: {mash.Presses}/{mash.pressesNeeded}  ({mash.TimeLeft:F1}s)";
         if (phase == Phase.Dragged && timing.IsRunning)
         {
             string last = timing.LastResult == true ? " ¡Bien!" : timing.LastResult == false ? " Fallo" : "";
-            return $"{message}\n[{timing.CurrentKey}]  {timing.CurrentPrompt + 1}/{timing.prompts}  aciertos {timing.Successes}{last}";
+            return $"{message}\n{Key(timing.CurrentKey, rich)}  {timing.CurrentPrompt + 1}/{timing.prompts}  aciertos {timing.Successes}{last}";
         }
         return message;
     }
 
+    string Key(UnityEngine.InputSystem.Key key, bool rich)
+    {
+        if (!rich) return $"[{key}]";
+        return $"<size=150%><color=#{ColorUtility.ToHtmlStringRGB(keyColor)}>[{key}]</color></size>";
+    }
+
     void LateUpdate()
     {
-        if (hudText != null) hudText.text = phase == Phase.Idle ? "" : HudLine();
+        if (hudText != null) hudText.text = phase == Phase.Idle ? "" : HudLine(true);
         if (hudFill != null)
         {
             bool show = (phase == Phase.Biting && mash.IsRunning) || (phase == Phase.Dragged && timing.IsRunning);
@@ -461,6 +618,10 @@ public class MusicalChairsGame : MonoBehaviour
     {
         EndPlayerSitPose();
         StopAllCoroutines();
+        spinning = false;
+        inBlackout = false;
+        ResetChairsToHome();
+        if (blackout != null) blackout.Cancel();
         if (music != null) music.Stop();
         if (playerChair != null) { playerChair.Release(); playerChair = null; }
         foreach (var c in chairs) if (c != null) c.ResetState();

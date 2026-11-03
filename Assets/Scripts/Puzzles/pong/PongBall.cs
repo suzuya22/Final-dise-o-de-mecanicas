@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 // Pelota de ping pong: física de rebote y detección de cuándo termina el tiro.
@@ -25,8 +26,16 @@ public class PongBall : MonoBehaviour
     [Tooltip("Segundos que debe estar quieta para terminar el tiro.")]
     public float restTime = 1f;
 
+    [Header("Rebotes")]
+    [Tooltip("Velocidad de impacto mínima para que un choque cuente como rebote (evita contar la pelota rodando).")]
+    public float minBounceSpeed = 0.6f;
+    [Tooltip("Segundos mínimos entre un rebote y el siguiente.")]
+    public float bounceCooldown = 0.08f;
+
     public int ColorIndex { get; private set; }
     public bool Launched { get; private set; }
+    // Rebotes que lleva en este tiro (para la bonificación).
+    public int BounceCount { get; private set; }
 
     BeerPongManager manager;
     Rigidbody rb;
@@ -34,30 +43,44 @@ public class PongBall : MonoBehaviour
     float launchTime;
     float restTimer;
     bool finished;
-    bool inFlight;
-    float driftSeed;
-
-    // La borrachera tuerce el tiro: mientras vuela (hasta el primer rebote) recibe un empujón lateral
-    // suave que va cambiando de dirección, proporcional al nivel de borrachera.
-    void ApplyDrunkDrift()
-    {
-        if (!inFlight || manager == null || manager.drunkDrift <= 0f) return;
-
-        float level = manager.CurrentDrunk;
-        if (level <= 0f) return;
-
-        Vector3 flat = rb.linearVelocity;
-        flat.y = 0f;
-        if (flat.sqrMagnitude < 0.01f) return;
-
-        Vector3 lateral = Vector3.Cross(Vector3.up, flat.normalized);
-        float noise = Mathf.PerlinNoise(driftSeed, (Time.time - launchTime) * manager.drunkDriftFrequency) * 2f - 1f;
-        rb.AddForce(lateral * (noise * manager.drunkDrift * level), ForceMode.Acceleration);
-    }
+    float lastBounceTime = -1f;
 
     void OnCollisionEnter(Collision collision)
     {
-        inFlight = false;
+        // Cada rebote de verdad (con algo de velocidad) cuenta y se avisa al manager.
+        if (!Launched || finished) return;
+        if (Time.time - lastBounceTime < bounceCooldown) return;
+        if (collision.relativeVelocity.magnitude < minBounceSpeed) return;
+
+        lastBounceTime = Time.time;
+        BounceCount++;
+        if (manager != null) manager.NotifyBounce(this, collision.GetContact(0).point, BounceCount);
+    }
+
+    // La pelota que encesta cae hasta el fondo del vaso (sin física) y desaparece, en vez de esfumarse en la boca.
+    public void DropInto(Vector3 target, float duration)
+    {
+        finished = true;
+        rb.isKinematic = true;
+        col.enabled = false;
+        StartCoroutine(DropRoutine(target, duration));
+    }
+
+    IEnumerator DropRoutine(Vector3 target, float duration)
+    {
+        Vector3 start = transform.position;
+        for (float t = 0f; t < duration; t += Time.deltaTime)
+        {
+            transform.position = Vector3.Lerp(start, target, Mathf.SmoothStep(0f, 1f, t / duration));
+            yield return null;
+        }
+        Destroy(gameObject);
+    }
+
+    // Para el evento de la pirámide: una pelota con más masa derriba vasos de verdad.
+    public void SetMass(float newMass)
+    {
+        rb.mass = newMass;
     }
 
     void Awake()
@@ -105,17 +128,14 @@ public class PongBall : MonoBehaviour
         rb.angularVelocity = Random.insideUnitSphere * randomSpin;
 
         Launched = true;
+        BounceCount = 0;
         launchTime = Time.time;
         restTimer = 0f;
-        inFlight = true;
-        driftSeed = Random.Range(0f, 100f);
     }
 
     void FixedUpdate()
     {
         if (!Launched || finished) return;
-
-        ApplyDrunkDrift();
 
         if (transform.position.y < killHeight || Time.time - launchTime > maxLifetime)
         {

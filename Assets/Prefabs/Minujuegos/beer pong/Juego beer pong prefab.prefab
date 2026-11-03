@@ -929,6 +929,8 @@ MonoBehaviour:
   ballPrefab: {fileID: 2479195068882904768, guid: b9f7335d93cbb594a915b1052bc09200, type: 3}
   launcher: {fileID: 5891626244717227282}
   cups: []
+  catchWidth: 0.13
+  catchAboveRim: 0.04
   assignColorsToCups: 1
   palette:
   - {r: 1, g: 0.55, b: 0.6, a: 1}
@@ -946,6 +948,38 @@ MonoBehaviour:
   drunkEffect: {fileID: 0}
   drunkPerHit: 0.201
   resetDrunkOnRestart: 1
+  memoryMode: 1
+  revealTime: 3
+  hiddenColor: {r: 0.85, g: 0.11, b: 0.11, a: 1}
+  shuffleAllCups: 1
+  shuffleSwaps: 2
+  swapDuration: 1.3
+  swapHop: 0.1
+  swapSideOffset: 0.15
+  revealOnResult: 1
+  popups: {fileID: 0}
+  onBounce:
+    m_PersistentCalls:
+      m_Calls: []
+  pyramidEnabled: 1
+  pyramidFromShot: 1
+  pyramidChance: 0.5
+  pyramidChanceGrowth: 0.25
+  maxPyramidsPerRound: 1
+  pyramidRows: 3
+  pyramidBalls: 1
+  pyramidBuildTime: 1
+  pyramidBallMass: 0.3
+  pyramidCupMass: 0.1
+  pyramidCupFriction: 0.5
+  pyramidCupLinearDamping: 0.05
+  pyramidCupAngularDamping: 0.1
+  sanity: {fileID: 0}
+  sanityPerCup: 4
+  sanityAllCupsBonus: 8
+  onPyramidFinished:
+    m_PersistentCalls:
+      m_Calls: []
   onCupHit:
     m_PersistentCalls:
       m_Calls: []
@@ -984,6 +1018,8 @@ MonoBehaviour:
   launchAngle: 60
   maxSideAngle: 25
   maxPoints: 60
+  visibleBounces: 1
+  maxPointsAfterBounce: 40
   timeStep: 0.03
   trajectoryMask:
     serializedVersion: 2
@@ -1299,6 +1335,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PongCup
   colorIndex: 0
   tintRenderers: 1
+  keepRimWhite: 1
+  rimColor: {r: 1, g: 1, b: 1, a: 1}
+  rimSplitU: 0.6074
   detectionTrigger: {fileID: 3123567032522571028}
   triggerHeight01: 0.3
   triggerWidth01: 0.55
@@ -1427,6 +1466,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PongCup
   colorIndex: 0
   tintRenderers: 1
+  keepRimWhite: 1
+  rimColor: {r: 1, g: 1, b: 1, a: 1}
+  rimSplitU: 0.6074
   detectionTrigger: {fileID: 7979043918348213799}
   triggerHeight01: 0.3
   triggerWidth01: 0.55
@@ -1560,6 +1602,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PongCup
   colorIndex: 0
   tintRenderers: 1
+  keepRimWhite: 1
+  rimColor: {r: 1, g: 1, b: 1, a: 1}
+  rimSplitU: 0.6074
   detectionTrigger: {fileID: 7764064303871509766}
   triggerHeight01: 0.3
   triggerWidth01: 0.55
@@ -1683,6 +1728,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PongCup
   colorIndex: 0
   tintRenderers: 1
+  keepRimWhite: 1
+  rimColor: {r: 1, g: 1, b: 1, a: 1}
+  rimSplitU: 0.6074
   detectionTrigger: {fileID: 1166074635638453958}
   triggerHeight01: 0.3
   triggerWidth01: 0.55
@@ -1816,6 +1864,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PongCup
   colorIndex: 0
   tintRenderers: 1
+  keepRimWhite: 1
+  rimColor: {r: 1, g: 1, b: 1, a: 1}
+  rimSplitU: 0.6074
   detectionTrigger: {fileID: 6852620785679227410}
   triggerHeight01: 0.3
   triggerWidth01: 0.55
@@ -1944,6 +1995,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PongCup
   colorIndex: 0
   tintRenderers: 1
+  keepRimWhite: 1
+  rimColor: {r: 1, g: 1, b: 1, a: 1}
+  rimSplitU: 0.6074
   detectionTrigger: {fileID: 4469192054347837986}
   triggerHeight01: 0.3
   triggerWidth01: 0.55
@@ -2067,6 +2121,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PongCup
   colorIndex: 0
   tintRenderers: 1
+  keepRimWhite: 1
+  rimColor: {r: 1, g: 1, b: 1, a: 1}
+  rimSplitU: 0.6074
   detectionTrigger: {fileID: 2398375210707563514}
   triggerHeight01: 0.3
   triggerWidth01: 0.55
@@ -2200,6 +2257,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PongCup
   colorIndex: 0
   tintRenderers: 1
+  keepRimWhite: 1
+  rimColor: {r: 1, g: 1, b: 1, a: 1}
+  rimSplitU: 0.6074
   detectionTrigger: {fileID: 5415588732259233611}
   triggerHeight01: 0.3
   triggerWidth01: 0.55
@@ -2328,6 +2388,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PongCup
   colorIndex: 0
   tintRenderers: 1
+  keepRimWhite: 1
+  rimColor: {r: 1, g: 1, b: 1, a: 1}
+  rimSplitU: 0.6074
   detectionTrigger: {fileID: 385313055256046069}
   triggerHeight01: 0.3
   triggerWidth01: 0.55
@@ -2456,6 +2519,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PongCup
   colorIndex: 0
   tintRenderers: 1
+  keepRimWhite: 1
+  rimColor: {r: 1, g: 1, b: 1, a: 1}
+  rimSplitU: 0.6074
   detectionTrigger: {fileID: 348906224811648786}
   triggerHeight01: 0.3
   triggerWidth01: 0.55
@@ -2584,6 +2650,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PongCup
   colorIndex: 0
   tintRenderers: 1
+  keepRimWhite: 1
+  rimColor: {r: 1, g: 1, b: 1, a: 1}
+  rimSplitU: 0.6074
   detectionTrigger: {fileID: 6975013198932938637}
   triggerHeight01: 0.3
   triggerWidth01: 0.55
@@ -2774,6 +2843,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PongCup
   colorIndex: 0
   tintRenderers: 1
+  keepRimWhite: 1
+  rimColor: {r: 1, g: 1, b: 1, a: 1}
+  rimSplitU: 0.6074
   detectionTrigger: {fileID: 4693213630383726914}
   triggerHeight01: 0.3
   triggerWidth01: 0.55
@@ -2897,6 +2969,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PongCup
   colorIndex: 0
   tintRenderers: 1
+  keepRimWhite: 1
+  rimColor: {r: 1, g: 1, b: 1, a: 1}
+  rimSplitU: 0.6074
   detectionTrigger: {fileID: 4375175049899398880}
   triggerHeight01: 0.3
   triggerWidth01: 0.55

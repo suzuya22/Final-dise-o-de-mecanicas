@@ -24,6 +24,8 @@ public class TimingQTE : MonoBehaviour
     public Key CurrentKey { get; private set; }
     public int CurrentPrompt { get; private set; }
     public int Successes { get; private set; }
+    // Segundos que quedan para pulsar en este intento (para la UI).
+    public float PromptTimeLeft { get; private set; }
     // Posición de la marca y zona, de 0 a 1.
     public float Marker { get; private set; }
     public float ZoneCenter { get; private set; }
@@ -42,6 +44,7 @@ public class TimingQTE : MonoBehaviour
             CurrentKey = possibleKeys[UnityEngine.Random.Range(0, possibleKeys.Length)];
             ZoneCenter = UnityEngine.Random.Range(zoneWidth, 1f - zoneWidth);
             LastResult = null;
+            PromptTimeLeft = timePerPrompt;
             float t = UnityEngine.Random.value;
             float elapsed = 0f;
 
@@ -50,6 +53,7 @@ public class TimingQTE : MonoBehaviour
                 t += Time.deltaTime * markerSpeed;
                 Marker = Mathf.PingPong(t * 2f, 1f);
                 elapsed += Time.deltaTime;
+                PromptTimeLeft = Mathf.Max(0f, timePerPrompt - elapsed);
 
                 var keyboard = Keyboard.current;
                 if (keyboard != null)

@@ -34,13 +34,30 @@ public class PauseTitleWobble : MonoBehaviour
     [Tooltip("Hacia dónde se ve el volumen cuando el título está quieto.")]
     public Vector2 depthDirection = new Vector2(1f, -1f);
 
+    [Header("Texto que cambia (opcional, para mensajes de juego)")]
+    [Tooltip("Copia el texto actual a las capas de profundidad cada vez que cambia. " +
+             "Quita las etiquetas de color para que el volumen quede de un solo tono.")]
+    public bool syncText = false;
+    [Tooltip("Cuando cambia la primera línea del texto, rebota como un resorte al aparecer.")]
+    public bool popOnMessageChange = false;
+    [Tooltip("Cuánto crece de golpe al aparecer (1.5 = 150 %).")]
+    public float popScale = 1.5f;
+    [Tooltip("Segundos que tarda en asentarse el rebote.")]
+    public float popDuration = 0.8f;
+
     RectTransform rt;
     Vector2 basePosition;
     Quaternion baseRotation;
     Vector3 baseScale;
     RectTransform[] layers;
+    TextMeshProUGUI[] layerTexts;
     float noiseTime;
     float seed;
+    string lastSynced;
+    string lastHeadline;
+    float popTime = float.MaxValue;
+    static readonly System.Text.RegularExpressions.Regex colorTag =
+        new System.Text.RegularExpressions.Regex("</?color[^>]*>");
 
     void Awake()
     {
@@ -62,6 +79,7 @@ public class PauseTitleWobble : MonoBehaviour
     void CreateLayers()
     {
         layers = new RectTransform[Mathf.Max(0, depthLayers)];
+        layerTexts = new TextMeshProUGUI[layers.Length];
 
         // Se crean de la más lejana a la más cercana, justo antes del título,
         // para que se dibujen detrás de él.
@@ -84,7 +102,35 @@ public class PauseTitleWobble : MonoBehaviour
             text.color = Color.Lerp(depthColor, depthColor * 0.6f, (float)i / Mathf.Max(1, layers.Length - 1));
 
             layers[i] = layerRt;
+            layerTexts[i] = text;
         }
+    }
+
+    // Pasa el texto actual a las capas de profundidad (sin etiquetas de color).
+    void SyncLayerText()
+    {
+        string source = titleText.text;
+        if (source == lastSynced) return;
+        lastSynced = source;
+        string plain = colorTag.Replace(source, "");
+        foreach (var t in layerTexts) t.text = plain;
+    }
+
+    // Rebote de resorte cuando cambia la primera línea del texto. Devuelve el factor de escala.
+    float PopFactor()
+    {
+        string text = titleText.text;
+        int end = text.IndexOf('\n');
+        string headline = end >= 0 ? text.Substring(0, end) : text;
+        if (headline != lastHeadline)
+        {
+            lastHeadline = headline;
+            if (!string.IsNullOrEmpty(headline)) popTime = 0f;
+        }
+
+        popTime += Time.unscaledDeltaTime;
+        if (popTime >= popDuration) return 1f;
+        return 1f + (popScale - 1f) * Mathf.Exp(-6f * popTime) * Mathf.Cos(popTime * 20f);
     }
 
     // Tiempo sin escalar: el menú de pausa congela el juego.
@@ -96,6 +142,9 @@ public class PauseTitleWobble : MonoBehaviour
             if (l.gameObject.activeSelf != titleText.gameObject.activeSelf) l.gameObject.SetActive(titleText.gameObject.activeSelf);
         if (!visible) return;
 
+        if (syncText) SyncLayerText();
+        float pop = popOnMessageChange ? PopFactor() : 1f;
+
         noiseTime += Time.unscaledDeltaTime * speed;
 
         float tiltX = Noise(0f);
@@ -103,7 +152,7 @@ public class PauseTitleWobble : MonoBehaviour
 
         Quaternion rotation = baseRotation * Quaternion.Euler(tiltX * maxTiltX, tiltY * maxTiltY, Noise(20f) * maxRollZ);
         Vector2 position = basePosition + new Vector2(Noise(30f), Noise(40f)) * positionJitter;
-        Vector3 scale = baseScale * (1f + Noise(50f) * scalePulse);
+        Vector3 scale = baseScale * (1f + Noise(50f) * scalePulse) * pop;
 
         rt.localRotation = rotation;
         rt.anchoredPosition = position;

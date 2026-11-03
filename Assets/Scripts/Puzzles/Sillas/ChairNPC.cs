@@ -25,6 +25,12 @@ public class ChairNPC : MonoBehaviour
     [Tooltip("Segundos que tarda en sentarse (0 = de golpe).")]
     public float sitDuration = 0.4f;
 
+    [Header("Dificultad")]
+    [Tooltip("Multiplica la velocidad de caminar y correr. Lo sube el MusicalChairsGame en cada ronda.")]
+    public float speedMultiplier = 1f;
+    [Tooltip("Hasta cuánto se acelera la animación al ir más rápido (evita que se vea ridículo).")]
+    public float maxAnimSpeed = 1.6f;
+
     public bool IsSeated => state == NpcState.Seated;
     public bool IsEliminated => state == NpcState.Eliminated;
     public bool IsCircling => state == NpcState.Circling;
@@ -51,6 +57,24 @@ public class ChairNPC : MonoBehaviour
         angle = startAngle;
         state = NpcState.Idle;
         gameObject.SetActive(true);
+        transform.position = game.RingPoint(angle);
+        transform.rotation = Quaternion.LookRotation(game.RingTangent(angle), Vector3.up);
+    }
+
+    // Ángulo actual alrededor del centro (según dónde está ahora).
+    public float CurrentAngle
+    {
+        get
+        {
+            Vector3 offset = transform.position - game.Center;
+            return Mathf.Atan2(offset.z, offset.x);
+        }
+    }
+
+    // Lo coloca al instante en ese punto del círculo (para el cambio de lugares).
+    public void PlaceOnRing(float newAngle)
+    {
+        angle = newAngle;
         transform.position = game.RingPoint(angle);
         transform.rotation = Quaternion.LookRotation(game.RingTangent(angle), Vector3.up);
     }
@@ -103,8 +127,9 @@ public class ChairNPC : MonoBehaviour
         if (state == NpcState.Circling)
         {
             float radius = Mathf.Max(0.1f, game.WalkRadius);
-            angle += game.Direction * (walkSpeed / radius) * Time.deltaTime;
-            MoveTowards(game.RingPoint(angle), walkSpeed * 1.5f);
+            float walk = walkSpeed * speedMultiplier;
+            angle += game.Direction * (walk / radius) * Time.deltaTime;
+            MoveTowards(game.RingPoint(angle), walk * 1.5f);
             walking = true;
         }
         else if (state == NpcState.Rushing && Time.time >= rushStartTime)
@@ -113,7 +138,7 @@ public class ChairNPC : MonoBehaviour
             if (targetChair != null)
             {
                 Vector3 seat = targetChair.Seat.position;
-                MoveTowards(seat, runSpeed);
+                MoveTowards(seat, runSpeed * speedMultiplier);
                 walking = running = true;
                 if (Flat(seat - transform.position).magnitude < 0.25f && targetChair.TryOccupy(this))
                 {
@@ -158,6 +183,7 @@ public class ChairNPC : MonoBehaviour
         animator.SetBool("IsWalking", walking);
         animator.SetBool("IsRunning", running);
         animator.SetFloat("Speed", running ? 2f : walking ? 1f : 0f);
+        animator.speed = (walking || running) ? Mathf.Clamp(speedMultiplier, 1f, maxAnimSpeed) : 1f;
     }
 
     static Vector3 Flat(Vector3 v) { v.y = 0f; return v; }

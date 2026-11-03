@@ -37,10 +37,10 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _ColorRes: 24
+    - _ColorRes: 48
     - _Contrast: 1.04
-    - _DitherSpread: 0.025
-    - _PixelHeight: 420
+    - _DitherSpread: 0.02
+    - _PixelHeight: 360
     - _Saturation: 1.12
     - _TintStrength: 0.15
     m_Colors:
