@@ -1,0 +1,70 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fc706303b0d930146be428a27fe73c16, type: 3}
+  m_Name: Persona mirando afuera
+  m_EditorClassIdentifier: Assembly-CSharp::DialogueData
+  lines:
+  - id: 
+    speaker: Persona mirando para afuera
+    text: "Qu\xE9 bonita pintura, \xBFno crees?"
+    action: 
+    responses:
+    - text: "\xBFPintura?"
+      goTo: pintura
+    - text: "\xBFHas visto a una chica de chores y cabello naranja largo pasar por
+        aqu\xED?"
+      goTo: chica
+    goTo: 
+    endsDialogue: 0
+    sanityChange: 0
+    addClue: 
+    giveItem: 
+    eventName: 
+  - id: pintura
+    speaker: Persona mirando para afuera
+    text: "S\xED, es agradable, refrescante a la vista."
+    action: 
+    responses:
+    - text: ...
+      goTo: 
+    goTo: 
+    endsDialogue: 1
+    sanityChange: 0
+    addClue: 
+    giveItem: 
+    eventName: 
+  - id: chica
+    speaker: Persona mirando para afuera
+    text: No, lo siento, he estado tratando de descifrar esto por un rato.
+    action: 
+    responses:
+    - text: "\xBFLa... ventana?"
+      goTo: 
+    goTo: 
+    endsDialogue: 0
+    sanityChange: 0
+    addClue: 
+    giveItem: 
+    eventName: 
+  - id: 
+    speaker: Persona mirando para afuera
+    text: Se siente como ver hacia afuera, es cierto.
+    action: "Se r\xEDe"
+    responses:
+    - text: ...
+      goTo: 
+    goTo: 
+    endsDialogue: 1
+    sanityChange: 0
+    addClue: 
+    giveItem: 
+    eventName: 

@@ -1,0 +1,86 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fc706303b0d930146be428a27fe73c16, type: 3}
+  m_Name: Persona bailando 2 - Buscando
+  m_EditorClassIdentifier: Assembly-CSharp::DialogueData
+  lines:
+  - id: 
+    speaker: Persona bailando 2
+    text: 
+    action: Baila
+    responses:
+    - text: "\xBFHas visto a una chica de chores y cabello naranja largo pasar por
+        aqu\xED?"
+      goTo: naranja
+    - text: "\xBFHas visto a una chica de vestido largo pasar por aqu\xED?"
+      goTo: vestido
+    goTo: 
+    endsDialogue: 0
+    sanityChange: 0
+    addClue: 
+    giveItem: 
+    eventName: 
+  - id: naranja
+    speaker: Persona bailando 2
+    text: "\xBFChica? \xBFNaranja? \xBFSiquiera sabemos cu\xE1l es el significado
+      de tales palabras?"
+    action: 
+    responses:
+    - text: "\xBFS\xED?"
+      goTo: 
+    goTo: 
+    endsDialogue: 0
+    sanityChange: 0
+    addClue: 
+    giveItem: 
+    eventName: 
+  - id: 
+    speaker: Persona bailando 2
+    text: "\xA1Ah! La duda no es buena, amigo m\xEDo. Si t\xFA no sabes lo que buscas,
+      \xBFc\xF3mo esperas que otros te ayuden a encontrarlo?"
+    action: 
+    responses:
+    - text: "\xBFLa has visto o no?"
+      goTo: 
+    goTo: 
+    endsDialogue: 0
+    sanityChange: 0
+    addClue: 
+    giveItem: 
+    eventName: 
+  - id: 
+    speaker: Persona bailando 2
+    text: "No conozco a tal persona, \xBFt\xFA s\xED?"
+    action: 
+    responses:
+    - text: ...
+      goTo: 
+    goTo: 
+    endsDialogue: 1
+    sanityChange: 0
+    addClue: 
+    giveItem: 
+    eventName: 
+  - id: vestido
+    speaker: Persona bailando 2
+    text: "\xBFChica? \xBFVestido? \xBFSiquiera sabemos cu\xE1l es el significado
+      de tales palabras?"
+    action: 
+    responses:
+    - text: ...
+      goTo: 
+    goTo: 
+    endsDialogue: 1
+    sanityChange: 0
+    addClue: 
+    giveItem: 
+    eventName: 

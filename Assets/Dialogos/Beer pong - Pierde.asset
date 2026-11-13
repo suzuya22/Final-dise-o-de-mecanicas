@@ -1,0 +1,133 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fc706303b0d930146be428a27fe73c16, type: 3}
+  m_Name: Beer pong - Pierde
+  m_EditorClassIdentifier: Assembly-CSharp::DialogueData
+  lines:
+  - id: 
+    speaker: Persona jugando 2
+    text: "\xBFQu\xE9 es esto? \xBFUn milagro? \xBFDe verdad existe alguien peor
+      que t\xFA en este juego?"
+    action: 
+    responses: []
+    goTo: 
+    endsDialogue: 0
+    sanityChange: 0
+    addClue: 
+    giveItem: 
+    eventName: 
+  - id: 
+    speaker: Persona jugando 1
+    text: "\xA1Ja! \xA1Sab\xEDa que estas bellezas no me iban a fallar!"
+    action: Bebe un sorbo de su cerveza
+    responses: []
+    goTo: 
+    endsDialogue: 0
+    sanityChange: 0
+    addClue: 
+    giveItem: 
+    eventName: 
+  - id: 
+    speaker: Persona jugando 2
+    text: "Ey, amigo... confi\xE9 en ti, me acabas de costar otra ronda de estas
+      porquer\xEDas."
+    action: "Habl\xE1ndole al prota"
+    responses:
+    - text: "No es como que mi intenci\xF3n fuera perder..."
+      goTo: 
+    goTo: 
+    endsDialogue: 0
+    sanityChange: 0
+    addClue: 
+    giveItem: 
+    eventName: 
+  - id: 
+    speaker: Persona jugando 2
+    text: 
+    action: Se van a ir
+    responses:
+    - text: "\xA1Esperen! Al menos ay\xFAdenme encontrando a mi amiga"
+      goTo: 
+    goTo: 
+    endsDialogue: 0
+    sanityChange: 0
+    addClue: 
+    giveItem: 
+    eventName: 
+  - id: 
+    speaker: Persona jugando 2
+    text: "\xBFTu amiga?"
+    action: 
+    responses:
+    - text: Ya saben, la chica del cabello naranja...
+      goTo: 
+    goTo: 
+    endsDialogue: 0
+    sanityChange: 0
+    addClue: 
+    giveItem: 
+    eventName: 
+  - id: 
+    speaker: Persona jugando 1
+    text: "\xBFLa chica...? \xA1Ah! \xBFDe verdad pensaste que sab\xEDa algo?...
+      Lo siento, amigo."
+    action: Se rasca la cabeza
+    responses:
+    - text: Ya veo..
+      goTo: puerta
+    goTo: 
+    endsDialogue: 0
+    sanityChange: 0
+    addClue: 
+    giveItem: 
+    eventName: 
+  - id: puerta
+    speaker: Persona jugando 2
+    text: "Eh... \xBFuna chica de cabello negro en una mo\xF1a?"
+    action: 
+    responses:
+    - text: "\xA1S\xED! \xA1Ella!"
+      goTo: 
+    goTo: 
+    endsDialogue: 0
+    sanityChange: 0
+    addClue: 
+    giveItem: 
+    eventName: 
+  - id: 
+    speaker: Persona jugando 2
+    text: "Pero si hace nada pas\xF3 por aqu\xED, se meti\xF3 a la pieza de atr\xE1s,
+      esa de la puerta chiquita."
+    action: 
+    responses:
+    - text: "\xBFPieza? \xBFMe est\xE1s jodiendo? \xBFQu\xE9 va a haber una pieza
+        en una put..."
+      goTo: 
+    goTo: 
+    endsDialogue: 0
+    sanityChange: 0
+    addClue: 
+    giveItem: 
+    eventName: 
+  - id: 
+    speaker: Persona jugando 2
+    text: 
+    action: "Se\xF1ala la puerta que antes no estaba all\xED"
+    responses:
+    - text: ...
+      goTo: 
+    goTo: 
+    endsDialogue: 1
+    sanityChange: 0
+    addClue: puerta_chiquita
+    giveItem: 
+    eventName: puerta_chiquita

@@ -1,0 +1,150 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fc706303b0d930146be428a27fe73c16, type: 3}
+  m_Name: Beer pong - Gana
+  m_EditorClassIdentifier: Assembly-CSharp::DialogueData
+  lines:
+  - id: 
+    speaker: Persona jugando 2
+    text: "\xA1Y nuestro perdedor invicto me debe otra ronda! \xA1La multitud enloquece!"
+    action: 
+    responses: []
+    goTo: 
+    endsDialogue: 0
+    sanityChange: 0
+    addClue: 
+    giveItem: 
+    eventName: 
+  - id: 
+    speaker: Persona jugando 1
+    text: "\xA1NO ES JUSTO!"
+    action: 
+    responses: []
+    goTo: 
+    endsDialogue: 0
+    sanityChange: 0
+    addClue: 
+    giveItem: 
+    eventName: 
+  - id: 
+    speaker: Persona jugando 2
+    text: Tu jugo milagroso no parece estarte ayudando.
+    action: "Se r\xEDe. Le lanza una botella al protagonista"
+    responses: []
+    goTo: 
+    endsDialogue: 0
+    sanityChange: 0
+    addClue: 
+    giveItem: botella
+    eventName: 
+  - id: 
+    speaker: Persona jugando 2
+    text: Toma, no la voy a necesitar.
+    action: "Se r\xEDe"
+    responses: []
+    goTo: 
+    endsDialogue: 0
+    sanityChange: 0
+    addClue: 
+    giveItem: 
+    eventName: 
+  - id: 
+    speaker: Persona jugando 1
+    text: "\xA1Pero te juro que s\xED funcionan! \xA1Si no fuera por estas bellezas
+      no estar\xEDas hablando conmigo aqu\xED hoy!"
+    action: 
+    responses: []
+    goTo: 
+    endsDialogue: 0
+    sanityChange: 0
+    addClue: 
+    giveItem: 
+    eventName: 
+  - id: 
+    speaker: Persona jugando 2
+    text: "Qu\xE9 mal perdedor..."
+    action: 
+    responses: []
+    goTo: 
+    endsDialogue: 0
+    sanityChange: 0
+    addClue: 
+    giveItem: 
+    eventName: 
+  - id: 
+    speaker: Persona jugando 1
+    text: "\xA1Lo digo en serio!"
+    action: 
+    responses:
+    - text: "\xA1Ejem! Sobre la chica..."
+      goTo: 
+    goTo: 
+    endsDialogue: 0
+    sanityChange: 0
+    addClue: 
+    giveItem: 
+    eventName: 
+  - id: 
+    speaker: Persona jugando 1
+    text: "\xBFLa chica...? \xA1Ah! \xBFDe verdad pensaste que sab\xEDa algo?...
+      Lo siento, amigo."
+    action: Se rasca la cabeza
+    responses:
+    - text: "\xA1Este...!"
+      goTo: puerta
+    goTo: 
+    endsDialogue: 0
+    sanityChange: 0
+    addClue: 
+    giveItem: 
+    eventName: 
+  - id: puerta
+    speaker: Persona jugando 2
+    text: "Eh... \xBFuna chica de cabello negro en una mo\xF1a?"
+    action: 
+    responses:
+    - text: "\xA1S\xED! \xA1Ella!"
+      goTo: 
+    goTo: 
+    endsDialogue: 0
+    sanityChange: 0
+    addClue: 
+    giveItem: 
+    eventName: 
+  - id: 
+    speaker: Persona jugando 2
+    text: "Pero si hace nada pas\xF3 por aqu\xED, se meti\xF3 a la pieza de atr\xE1s,
+      esa de la puerta chiquita."
+    action: 
+    responses:
+    - text: "\xBFPieza? \xBFMe est\xE1s jodiendo? \xBFQu\xE9 va a haber una pieza
+        en una put..."
+      goTo: 
+    goTo: 
+    endsDialogue: 0
+    sanityChange: 0
+    addClue: 
+    giveItem: 
+    eventName: 
+  - id: 
+    speaker: Persona jugando 2
+    text: 
+    action: "Se\xF1ala la puerta que antes no estaba all\xED"
+    responses:
+    - text: ...
+      goTo: 
+    goTo: 
+    endsDialogue: 1
+    sanityChange: 0
+    addClue: puerta_chiquita
+    giveItem: 
+    eventName: puerta_chiquita

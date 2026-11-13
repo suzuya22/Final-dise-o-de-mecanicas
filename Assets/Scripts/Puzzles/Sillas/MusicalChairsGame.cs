@@ -182,6 +182,7 @@ public class MusicalChairsGame : MonoBehaviour
     // Conéctalo, por ejemplo, a un PlayerTrigger en la zona del juego.
     public void StartGame()
     {
+        StopDemo();
         if (IsPlaying) return;
         if (player == null || sanity == null || chairs == null || chairs.Length == 0)
         {
@@ -613,11 +614,95 @@ public class MusicalChairsGame : MonoBehaviour
         GUI.color = prev;
     }
 
+    // ---- Modo demostración: solo juegan los NPC (la toma de ambientación antes de invitar al jugador).
+    // No toca al jugador, ni la cordura, ni el estado de la partida (phase sigue en Idle).
+    Coroutine demoRoutine;
+    public bool IsDemo => demoRoutine != null;
+
+    public void StartDemo()
+    {
+        if (IsPlaying || IsDemo) return;
+        demoRoutine = StartCoroutine(DemoLoop());
+    }
+
+    // Termina la demostración y deja sillas y NPC como al principio.
+    public void StopDemo()
+    {
+        if (demoRoutine == null) return;
+        StopCoroutine(demoRoutine);
+        demoRoutine = null;
+        if (music != null) music.Stop();
+        ResetChairsToHome();
+        foreach (var c in chairs) if (c != null) c.ResetState();
+        foreach (var n in npcs) if (n != null) n.ResetState();
+    }
+
+    IEnumerator DemoLoop()
+    {
+        while (true)
+        {
+            var active = new List<ChairNPC>();
+            foreach (var n in npcs) if (n != null) active.Add(n);
+            if (active.Count < 2) { demoRoutine = null; yield break; }
+
+            // Una silla menos que participantes, como en la partida real.
+            ResetChairsToHome();
+            for (int i = 0; i < chairs.Length; i++)
+            {
+                if (chairs[i] == null) continue;
+                chairs[i].ResetState();
+                chairs[i].gameObject.SetActive(i < active.Count - 1);
+            }
+
+            WalkRadius = walkRadius > 0f ? walkRadius : AutoRadius();
+            float step = Mathf.PI * 2f / active.Count;
+            for (int i = 0; i < active.Count; i++) active[i].Init(this, step * i);
+            if (music != null) music.Play();
+
+            while (active.Count > 1)
+            {
+                foreach (var n in active) { n.speedMultiplier = 1f; n.StartCircling(); }
+                yield return new WaitForSeconds(Random.Range(musicTime.x, musicTime.y));
+
+                foreach (var n in active) n.StartRush();
+                float end = Time.time + rushTimeout;
+                while (Time.time < end && FreeChairCount() > 0) yield return null;
+                yield return new WaitForSeconds(0.8f);
+                foreach (var n in active) n.Stop();
+                yield return new WaitForSeconds(1.2f);
+
+                // El que se quedó sin silla sale; los demás se levantan y se retira una silla.
+                for (int i = active.Count - 1; i >= 0; i--)
+                {
+                    if (active[i].IsSeated) continue;
+                    active[i].Eliminate();
+                    active.RemoveAt(i);
+                }
+                foreach (var n in active) n.StandUp();
+                RemoveOneChair();
+                yield return new WaitForSeconds(0.8f);
+            }
+
+            // Hay un ganador: se pausa un momento y vuelve a empezar con todos.
+            yield return new WaitForSeconds(2f);
+            if (music != null) music.Stop();
+            foreach (var n in npcs) if (n != null) n.ResetState();
+        }
+    }
+
+    // Salta el minijuego dándolo por ganado (botón de saltar). Lo que pase después lo decide onWin.
+    public void SkipWin()
+    {
+        if (!IsPlaying) return;
+        onWin.Invoke();
+    }
+
     // Para reiniciar a mano desde un evento (por ejemplo para volver a jugar).
     public void ResetGame()
     {
         EndPlayerSitPose();
         StopAllCoroutines();
+        demoRoutine = null;
         spinning = false;
         inBlackout = false;
         ResetChairsToHome();

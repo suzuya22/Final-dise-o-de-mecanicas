@@ -1,0 +1,72 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fc706303b0d930146be428a27fe73c16, type: 3}
+  m_Name: Familia 7 minutos - Antes
+  m_EditorClassIdentifier: Assembly-CSharp::DialogueData
+  lines:
+  - id: 
+    speaker: Hija
+    text: Tengo hambre..
+    action: 
+    responses: []
+    goTo: 
+    endsDialogue: 0
+    sanityChange: 0
+    addClue: 
+    giveItem: 
+    eventName: 
+  - id: 
+    speaker: Madre
+    text: Sigue los aplausos, son el camino correcto, lo son.
+    action: 
+    responses: []
+    goTo: 
+    endsDialogue: 0
+    sanityChange: 0
+    addClue: 
+    giveItem: 
+    eventName: 
+  - id: 
+    speaker: Hija
+    text: Madre, por favor.
+    action: 
+    responses: []
+    goTo: 
+    endsDialogue: 0
+    sanityChange: 0
+    addClue: 
+    giveItem: 
+    eventName: 
+  - id: 
+    speaker: Padre
+    text: "\xA1Que sigas los alaridos de victoria! \xA1Ve! Si quieres obtener algo
+      de nosotros tendr\xE1s que probar que lo vales."
+    action: 
+    responses: []
+    goTo: 
+    endsDialogue: 0
+    sanityChange: 0
+    addClue: 
+    giveItem: 
+    eventName: 
+  - id: 
+    speaker: Madre
+    text: "\xA1Prueba que vale la pena! \xBFEsperas que te demos algo? \xA1Pru\xE9banos
+      que mereces algo!"
+    action: 
+    responses: []
+    goTo: 
+    endsDialogue: 1
+    sanityChange: 0
+    addClue: 
+    giveItem: 
+    eventName: 

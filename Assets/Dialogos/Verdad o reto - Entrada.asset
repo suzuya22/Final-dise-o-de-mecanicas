@@ -1,0 +1,131 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fc706303b0d930146be428a27fe73c16, type: 3}
+  m_Name: Verdad o reto - Entrada
+  m_EditorClassIdentifier: Assembly-CSharp::DialogueData
+  lines:
+  - id: 
+    speaker: Lin
+    text: Me encontraste, te tardaste mucho.
+    action: Lo saluda
+    responses:
+    - text: "T\xFA desapareciste"
+      goTo: 
+    goTo: 
+    endsDialogue: 0
+    sanityChange: 0
+    addClue: 
+    giveItem: 
+    eventName: 
+  - id: 
+    speaker: Lin
+    text: "No es cierto, siempre estuve aqu\xED."
+    action: 
+    responses:
+    - text: "Es hora de irnos, este lugar es muy extra\xF1o"
+      goTo: 
+    goTo: 
+    endsDialogue: 0
+    sanityChange: 0
+    addClue: 
+    giveItem: 
+    eventName: 
+  - id: 
+    speaker: Lin
+    text: "\xBFIrnos? \xBFPor qu\xE9? Todav\xEDa hay un juego que quiero jugar contigo."
+    action: 
+    responses:
+    - text: "\xBFDe qu\xE9 hablas? No hay nada m\xE1s que jugar, solo v\xE1monos"
+      goTo: 
+    goTo: 
+    endsDialogue: 0
+    sanityChange: 0
+    addClue: 
+    giveItem: 
+    eventName: 
+  - id: 
+    speaker: Lin
+    text: "No me ir\xE9 si no juegas conmigo."
+    action: 
+    responses:
+    - text: ...
+      goTo: 
+    - text: "\xBFQu\xE9 tengo que hacer?"
+      goTo: 
+    goTo: 
+    endsDialogue: 0
+    sanityChange: 0
+    addClue: 
+    giveItem: 
+    eventName: 
+  - id: 
+    speaker: Lin
+    text: "Si\xE9ntate conmigo y te lo dir\xE9."
+    action: El prota se sienta frente a ella y pasa a primera persona
+    responses: []
+    goTo: 
+    endsDialogue: 0
+    sanityChange: 0
+    addClue: 
+    giveItem: 
+    eventName: 
+  - id: 
+    speaker: Lin
+    text: "Juguemos verdad o reto. Si la botella te apunta, te dar\xE9 un reto; si
+      me apunta a m\xED, me puedes preguntar lo que quieras."
+    action: El prota inclina la cabeza, confuso
+    responses:
+    - text: "Pero as\xED no funciona el juego\u2026"
+      goTo: 
+    goTo: 
+    endsDialogue: 0
+    sanityChange: 0
+    addClue: 
+    giveItem: 
+    eventName: sentarse
+  - id: 
+    speaker: Lin
+    text: "A veces las cosas pueden ser diferentes, \xBFno?"
+    action: 
+    responses:
+    - text: ...
+      goTo: 
+    - text: "\xBFY cu\xE1ndo sabremos que se termin\xF3?"
+      goTo: 
+    goTo: 
+    endsDialogue: 0
+    sanityChange: 0
+    addClue: 
+    giveItem: 
+    eventName: 
+  - id: 
+    speaker: Lin
+    text: Lo sabremos en un rato.
+    action: Se quedan en silencio y la botella empieza a girar
+    responses: []
+    goTo: 
+    endsDialogue: 0
+    sanityChange: 0
+    addClue: 
+    giveItem: 
+    eventName: 
+  - id: 
+    speaker: Lin
+    text: 
+    action: 
+    responses: []
+    goTo: 
+    endsDialogue: 1
+    sanityChange: 0
+    addClue: 
+    giveItem: 
+    eventName: empezar_juego

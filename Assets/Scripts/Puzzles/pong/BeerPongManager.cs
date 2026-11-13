@@ -194,6 +194,19 @@ public class BeerPongManager : MonoBehaviour
         pyramidAim = null;
     }
 
+    // Salta el minijuego dándolo por ganado (botón de saltar).
+    public void ForceWin()
+    {
+        if (IsFinished) return;
+        StopAllCoroutines();
+        AbortEvent();
+        if (currentBall != null) Destroy(currentBall.gameObject);
+        currentBall = null;
+        IsFinished = true;
+        lastMessage = "¡Ganaste!";
+        onWin.Invoke();
+    }
+
     public void StartRound()
     {
         StopAllCoroutines();

@@ -60,8 +60,10 @@ Assets/
     Interfaz/Scripts para panel de pausa/   PauseMenu, PauseTitleWobble, UIHoverJump
     Interfaz/Scripts para inventario/       InventoryMenu, InventoryIconBob
     Interfaz/UniqueEventSystem.cs
-    Dialogos/                  (vacío)
-  Editor/                      SevenMinutesSceneBuilder.cs, ProtaAnimatorSetupTool.cs, JefeAnimatorSetupTool.cs
+    Dialogos/                  DialogueData, DialogueRunner, DialogueUI, DialogueTrigger, ClueLog
+  Dialogos/                    Conversaciones (assets DialogueData) generadas desde la tabla del equipo
+  Editor/                      SevenMinutesSceneBuilder.cs, ProtaAnimatorSetupTool.cs, JefeAnimatorSetupTool.cs,
+                               DialogueSetupTool.cs
   Prefabs/Minujuegos/beer pong/Juego beer pong prefab.prefab
   Prefabs/Interfaz/            Pausa.prefab, Inventario.prefab (UI reutilizable entre escenas)
   Arte/
@@ -69,6 +71,11 @@ Assets/
     Assets para puzzles/
       Pong/                    Vaso.fbx, Pelota.fbx (+ Vasos.fbx, Pelotas.fbx sin usar)
       7 minutos en el cielo/   Base.fbx, Cartones flotantes.fbx, Cuadrosblend.fbx, Final boss.fbx, Piso2.fbx
+        Mapa/                  Arte nuevo del piso 1 (aún sin usar en escena): PAred y piso.fbx, Cortinas y escalerablend.fbx,
+                               Puertas.fbx (bar, botellas, llave, puerta básica y doble, cama, escritorio...) y sus texturas
+      verdad o reto/           Habitación (sola y decorada), botella, alfombra, globo, peluche, carrito, puerta (sin usar aún)
+    Npc/                       Npc´s.fbx: 21 mallas Character_base.* sin esqueleto ni texturas
+    UI/UI/Dialogues/           Cajas de diálogo, nombre y respuesta, y 4 fuentes (los .zip Normal/Bien/Mal/Muy Mal)
       Sillas/                  Chair.fbx
       Jefe/                    Jefe.fbx (rig + 5 clips), Animaciones/ (clips individuales), Materiales/ (4 materiales URP), Texturas/
     Entorno/                   Chiva_adentro.fbx, Chiva_afuera.fbx, Portada.fbx
@@ -157,11 +164,60 @@ Reglas del GDD: 7 vasos de colores, una pelota a la vez del color de un vaso que
 ### Prefab del jugador (`Prefabs/Personaje/Jugador.prefab`)
 El jugador animado (Prota Animado + `ProtaController`, `PlayerMovement`, `PlayerAnimator`, `SanityManager`,
 `PlayerInventory`, `PlayerInteractor`, `PlayerLookDown`, `BallThrower`, `Camara jugador` con `CameraCollision`) es un
-prefab sin referencias externas, usado en `Juego` y en `Test de juego de las sillas`. En `Juego` va con **escala 0.6**
-en la raíz (el autobús mide 2.1 m de alto y el jugador de 1.6 m no cabía bien; la escala encoge también el
-`CharacterController` y la cámara). Si lo pones en otra escena, ajusta esa escala y reconecta lo que apunte al jugador
+prefab sin referencias externas, usado en `Juego` y en `Test de juego de las sillas`. En `Juego` va a **escala 1**
+(desde el 2026-11-12): en vez de encoger al jugador se agrandó `Chiva_adentro` con **escala no uniforme**
+(3.36, 1.62, 2.33): interior de **9 × 16 m y 3.4 m de alto**, suelo en y = 0.19 (a 1.5 uniforme el usuario lo vio
+diminuto). Los sillones se reescalaron aparte para medir 1.1 m de fondo y van pegados a su pared. No se tocó el FBX:
+son overrides de la instancia. Como el FBX solo trae colisión de suelo, las paredes, el techo y los sillones
+tienen cajas invisibles en `Colisiones chiva`. El beer pong NO se escaló (su física está calibrada): va en el grupo
+`Beer pong`, con la mesa a 0.75 m del suelo y pegado a la pared delantera. En `Puertas` hay tres puertas todavía sin
+función: la chiquita (a sillas) y la de Lina en la pared trasera, y la alta (a 7 minutos) sobre el sillón izquierdo.
+Ojo: los objetos de `Puertas.fbx` tienen escala ~100 en el FBX y sus mallas son diminutas; para copiarlos usa
+`lossyScale`. Si pones el jugador en otra escena, reconecta lo que apunte a él
 (`MinigameZone.player/playerCamera`, `BeerPongManager.sanity`, `SanityBarUI.sanity`...). El `Juego.unity` también tiene
 el prefab `Inventario` (con `closeWithEscape` apagado, porque Escape ya sale del minijuego) y la pausa suelta.
+
+### Mapa único en `Juego.unity` (armado el 2026-11-12)
+Todas las habitaciones viven en `Juego`, lejos de la chiva, y se entra por puertas con `ZoneTeleport` (E):
+- `Habitacion sillas` en x = 200 (copiada de la escena de pruebas, que sigue intacta). **Sala low poly** hecha por el
+  agente de Gemini: `Arte/Assets para puzzles/Sillas/Sala/Sala_Cascaron.fbx` (108 triángulos: suelo, 4 paredes, techo,
+  3 `Panel_Respiracion`, empties `Centro`/`Llegada`) y `Sala_Mobiliario.fbx` (1 200: pupitres, sillas, estante, reloj,
+  hojas, 5 lámparas, puerta; todo a más de 6 m del centro). Va centrada en el `Cylinder` (`circleCenter`). Se añadieron
+  colisiones (MeshCollider en la estructura, BoxCollider en pupitres y estante), el techo **no proyecta sombra** (así
+  el sol de `Juego` ilumina la sala y el apagón puede atenuarlo), una luz puntual por lámpara (ya en
+  `ChairsBlackout.lights`) y `BreathingPanel` (en `Scripts/Puzzles/Sillas`) en los 3 paneles: se inflan 0.25 m hacia el
+  centro cada 5 s. Los materiales emisivos de las lámparas NO se atenúan en el apagón. La puerta del FBX es decorativa.
+  El aspecto "salón/aula" lo propuso la IA, no viene del documento de narrativa (que no describe esa habitación).
+  El suelo de la sala es una caja gruesa (`Suelo (colision)`, 1 m, cara superior en y = 0) en vez de la malla fina del FBX.
+  `FallRescue` (`Scripts/Personaje`): si el jugador baja de y = -5 cerca de su zona, lo devuelve a un punto seguro; hay
+  uno en la sala (`Rescate de caida (sillas)`, vuelve a `Llegada sillas`) y otro en la chiva (`Rescate de caida (chiva)`).
+  El usuario reportó que se caía al vacío en la sala el 2026-11-12; no se pudo reproducir (ver el cambio anterior).
+  Puerta chiquita → `Llegada sillas`
+  y arranca `MusicalChairsGame.StartGame`. Al ganar: da el objeto `silla`, desbloquea la puerta alta y devuelve a la
+  chiva; al perder: devuelve a la chiva (se puede reintentar). Sus canvas (`Canvas HUD sillas`, `Canvas Apagon`) son raíces.
+- `Habitacion 7 minutos` en x = 400. Puerta alta (bloqueada hasta ganar sillas) → `Punto de reaparicion`. La salida
+  (`Salida a la chiva`, junto a la puerta de salida del pasillo) se desbloquea con `HuggerBoss.onDefeated`.
+  `SevenMinutesPuzzle.playerInside` (apagado aquí; lo encienden y apagan las puertas con `EnterPuzzle`/`LeavePuzzle`)
+  evita que el puzzle se reinicie cuando la cordura se acaba en otra habitación. No se trajo su `Luz de luna`: la sala
+  la ilumina el sol de `Juego` y se ve más clara que en la escena de pruebas.
+- `Habitacion verdad o reto` en x = -200: `HabitacionDecorada.fbx` a escala 6 (7 × 7 m), con colisiones y una luz. La
+  puerta de Lina se desbloquea al recoger el `objeto_familia` (la medalla) en 7 minutos. Sin lógica de juego todavía.
+- `HUD interaccion`: canvas con el texto "E - ..." y la barra de mantener E, conectados al `PlayerInteractor` del jugador.
+- `Dialogos`, `dialogos manager` y `trigger dialogo` (prueba del usuario) también están ya en `Juego`.
+- **NPCs y diálogos de la chiva** (objeto `NPCs`, 2026-11-12): `Arte/Npc/Npc´s.fbx` trae 5 modelos estáticos (sin
+  esqueleto: no caminan ni bailan) que se partieron en los prefabs `Prefabs/Personaje/NPC 1-5.prefab` (1.53 m, con
+  `CapsuleCollider`). NPC 1 = niña de trenzas (Persona jugando 2), NPC 2 = pelo blanco y vestido celeste (**Lin
+  provisional**; no coincide con el cabello naranja del texto), NPC 3-5 son grises y en la escena se tiñen con
+  materiales `Arte/Npc/Materiales/NPC *.mat` (Daniel amarillo, bailarines lila/menta, ventana celeste, jugador 1 salmón).
+  - `Dialogo de llegada` (`playOnStart`, 1.5 s): al acabar, Lin y Daniel se desactivan ("se van").
+  - La zona de beer pong tiene el collider **apagado**: el minijuego se inicia hablando con Persona jugando 1/2 (evento
+    `jugar` → `MinigameZone.EnterMinigame`). `BeerPongManager.onWin/onLose` → `ExitMinigame` + diálogo "Gana"/"Pierde"
+    (objetos hijos `Dialogo gana/pierde` de Persona jugando 2); `autoRestartOnLose` apagado en la escena.
+  - El evento `puerta_chiquita` activa la puerta (empieza **inactiva**), da el objeto `pelota`, y apaga el hablar con
+    los dos jugadores. Los bailarines cambian a su diálogo "Buscando" cuando existe la pista `puerta_chiquita`.
+  - `DialogueTrigger` ganó `playOnStart`, `startDelay` y `SetInteractable(bool)`.
+  - Con el editor sin foco el Play se congela (`Application.runInBackground` es false): al probar por MCP, actívalo.
+  - El objeto `trigger dialogo` (en x≈0.2, z≈-12) es una prueba del usuario con "Beer pong - Gana"; no es parte del flujo.
 
 ### Sistemas del jugador (`Scripts/Personaje/`)
 - `SanityManager`: cordura (`Drain`, `Restore`, `ResetSanity`, eventos `onSanityChanged(float 0-1)` y `onSanityDepleted`).
@@ -261,6 +317,58 @@ Solo lógica; el usuario asigna todo. Asset: `Arte/Assets para puzzles/Sillas/Ch
   porque el `CharacterController` del jugador chocaba con ella y lo expulsaba medio metro hacia atrás al sentarse.
 - Al sentarse solo se usa el giro horizontal del `Seat Point` (las esferas de la escena heredan la rotación del FBX
   de la silla); con `seatAtFloorLevel` la posición queda a la altura del suelo del círculo.
+
+### Diálogos, pistas y bebida (`Scripts/Dialogos/`, escrito el 2026-11-12, **sin probar en el editor**)
+- `DialogueData` (ScriptableObject, *Create > La Chiva > Diálogo*): lista de líneas que se leen en orden. Cada línea
+  tiene `speaker`, `text`, respuestas del prota (`responses`, cada una con `goTo`), `goTo`/`endsDialogue` y efectos
+  (`sanityChange`, `addClue`, `giveItem`, `eventName`). Las ramas empiezan en una línea con `id` y deben acabar con
+  `endsDialogue`, o siguen con la línea de abajo. Una línea sin texto ni respuestas solo aplica sus efectos.
+- `DialogueRunner` (uno por escena): lleva la conversación, bloquea `PlayerMovement`, apaga `PlayerInteractor`
+  mientras dura y aplica los efectos. E/Espacio/Enter avanza; W/S + E, 1-4 o clic eligen respuesta. No congela el tiempo.
+- `DialogueUI` (raíz del prefab `Prefabs/Interfaz/Dialogos.prefab`, Canvas de orden 40): caja, nombre, retrato
+  opcional por personaje y hasta 4 respuestas (cajas ordenadas de abajo hacia arriba). Cambia de fuente según la
+  cordura (Bien/Normal/Mal/Muy Mal). Sigue la guía `Dialogue Guide.png` (320x180 a escala 6, como el inventario).
+- `DialogueTrigger : Interactable`: en el NPC. Se inicia con E o con `Play()` desde un evento. `variants` cambia de
+  conversación según una pista (p. ej. `pong_dijo_no` → "Beer pong - Volver"); `namedEvents` conecta los `eventName`
+  de las líneas (`jugar`, `puerta_chiquita`, `sentarse`, `empezar_juego`) con UnityEvents de la escena.
+- `ClueLog`: lista de pistas/marcas (strings). Es lo que Verdad o reto usará para contradecir a Lin.
+- `SanityDrink` (en el jugador): Q gasta la `botella` del inventario y devuelve cordura.
+- `DialogueSetupTool`: menús *La Chiva > Diálogos > Crear prefab de la interfaz* (convierte los PNG en sprites, crea
+  los font assets en `Arte/UI/UI/Dialogues/Fuentes TMP`) y *Crear conversaciones del documento* (genera `Assets/Dialogos`
+  sin sobreescribir las existentes).
+- **Progresión acordada:** beer pong (da pelota; botella si ganas) → puerta chiquita → sillas (da silla) → 7 minutos
+  (da medalla) → Verdad o reto. Las habitaciones irán en la misma escena, aparte, conectadas con `ZoneTeleport`.
+  Zona VIP y techo descartados por ahora.
+
+### Entrada a las sillas: demostración + recorrido + invitación (2026-11-12)
+- `MusicalChairsGame.StartDemo/StopDemo`: los NPC juegan solos (sin jugador, cordura ni `phase`; una silla menos que
+  NPC, uno eliminado por ronda, y vuelve a empezar). `StartGame` y `ResetGame` la cortan.
+- `SillasIntro` (objeto `Intro sillas`): la puerta chiquita ya NO llama a `StartGame` sino a `Begin()`: arranca la
+  demostración y, la primera vez (`tourOnlyFirstTime`), hace el recorrido de 7 s con `Camara recorrido sillas` por los
+  puntos de `Recorrido sillas` (curva Catmull-Rom mirando a `Centro`; los puntos deben quedar DENTRO de la sala: las
+  paredes son de una sola cara). Al acabar lanza `onTourFinished` → `Play()` del `DialogueTrigger` de
+  `Persona que invita (sillas)`. El evento `jugar` de ese diálogo llama a `Accept()`: parpadeo oscuro
+  (`ChairsBlackout.Blink`) → `StopDemo` + `StartGame`. Las entradas siguientes solo hacen la demostración y se puede
+  volver a hablar con E (`onBegin` reactiva al NPC).
+- Diálogo `Dialogos/Sillas - Invitacion.asset`: las dos primeras líneas son del usuario ("Oe, ¿has visto a una chica de
+  pelo rojo por aquí?" / "Puede ser, pero no te voy a decir a dónde fue. Estás amargando el ambiente, juégate algo
+  primero."); las respuestas se tomaron de la tabla del equipo ("Bueno, bueno. Juguemos pues" / "Se le nota que no sabe
+  nada") y rechazar termina en silencio, igual que el beer pong. Son **provisionales**, pendientes del equipo de guion.
+
+### Botón de saltar minijuego (2026-11-12)
+- `Prefabs/Interfaz/BotonSaltar.prefab` (`MinigameSkipUI`, Canvas de orden -1, esquina superior derecha, sprite
+  `Response box` y la fuente de los botones). Un solo botón compartido: cada minijuego tiene su `MinigameSkip` (con
+  `Begin()`, `End()` y el evento `onSkip`). `allowSkip` en la UI apaga el botón en todos los minijuegos (versión final).
+- Cableado en `Juego`: beer pong (`Saltar beer pong`: `MinigameZone.onEnter/onExit`; `onSkip` → `BeerPongManager.ForceWin`),
+  sillas (`Saltar sillas`: `onGameStart` / `onWin` / `onLose`; `onSkip` → `MusicalChairsGame.SkipWin`) y 7 minutos
+  (`Saltar 7 minutos`: se muestra al entrar por la puerta alta; al saltar da `objeto_familia`, desbloquea la puerta de
+  Lina y la salida, y teletransporta fuera). **Saltar = darlo por ganado**, sin penalización de cordura.
+  Verdad o reto aún no existe: cuando se haga, ponerle su propio `MinigameSkip`.
+- **Fuentes:** todo texto debe usar las del proyecto. `TMP Settings` ahora tiene como fuente por defecto
+  `texto para botones en pausa`. Los font assets de diálogo (`Arte/UI/UI/Dialogues/Fuentes TMP`) son dinámicos y se
+  precargaron con el alfabeto español; `Dialogo Normal` (WritePix16) no trae `'`, `…`, comillas curvas ni `_`, así que
+  usa la fuente de los botones como respaldo, y las otras tres usan `Dialogo Normal`. `pixel-arial-14` (`Bien`) no trae
+  `¿`, tildes ni `ñ`: salen del respaldo.
 
 ### Menú de pausa (`Juego.unity`, objeto "Controlador de la interfaz")
 - `PauseMenu`: la tecla P congela el juego (`timeScale = 0`) y el panel entra desde la izquierda.

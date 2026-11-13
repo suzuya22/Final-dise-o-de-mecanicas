@@ -1,0 +1,67 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fc706303b0d930146be428a27fe73c16, type: 3}
+  m_Name: Persona jugando 1 - Buscando
+  m_EditorClassIdentifier: Assembly-CSharp::DialogueData
+  lines:
+  - id: 
+    speaker: Persona jugando 1
+    text: 
+    action: Toma cerveza
+    responses:
+    - text: "\xBFHas visto a una chica de chores y cabello naranja largo pasar por
+        aqu\xED?"
+      goTo: 
+    goTo: 
+    endsDialogue: 0
+    sanityChange: 0
+    addClue: 
+    giveItem: 
+    eventName: 
+  - id: 
+    speaker: Persona jugando 1
+    text: "No lo s\xE9, no lo s\xE9, \xA1tal vez te lo diga si aceptas jugar con
+      nosotros!"
+    action: "Se r\xEDe"
+    responses:
+    - text: Bueno, bueno. Juguemos pues
+      goTo: jugar
+    - text: Oigan, se le nota que no sabe nada
+      goTo: nada
+    goTo: 
+    endsDialogue: 0
+    sanityChange: 0
+    addClue: 
+    giveItem: 
+    eventName: 
+  - id: jugar
+    speaker: Persona jugando 1
+    text: 
+    action: 
+    responses: []
+    goTo: 
+    endsDialogue: 1
+    sanityChange: 0
+    addClue: 
+    giveItem: 
+    eventName: jugar
+  - id: nada
+    speaker: Persona jugando 1
+    text: 
+    action: 
+    responses: []
+    goTo: 
+    endsDialogue: 1
+    sanityChange: 0
+    addClue: 
+    giveItem: 
+    eventName: 

@@ -1,0 +1,125 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fc706303b0d930146be428a27fe73c16, type: 3}
+  m_Name: Beer pong - Invitacion
+  m_EditorClassIdentifier: Assembly-CSharp::DialogueData
+  lines:
+  - id: 
+    speaker: Persona jugando 1
+    text: "Otra v\xEDctima."
+    action: 
+    responses: []
+    goTo: 
+    endsDialogue: 0
+    sanityChange: 0
+    addClue: 
+    giveItem: 
+    eventName: 
+  - id: 
+    speaker: Persona jugando 2
+    text: "Deja de decir eso. \xBFQuer\xE9s jugar?"
+    action: 
+    responses:
+    - text: "S\xED"
+      goTo: si
+    - text: No
+      goTo: no
+    - text: "Mmmm... \xBFy qu\xE9 gano si digo que s\xED?"
+      goTo: gano
+    goTo: 
+    endsDialogue: 0
+    sanityChange: 0
+    addClue: 
+    giveItem: 
+    eventName: 
+  - id: gano
+    speaker: Persona jugando 1
+    text: Te regalo una de estas... cosas si sos capaz de ganarme.
+    action: Le da un sorbo a su cerveza
+    responses: []
+    goTo: 
+    endsDialogue: 0
+    sanityChange: 0
+    addClue: 
+    giveItem: 
+    eventName: 
+  - id: 
+    speaker: Persona jugando 1
+    text: "Son buen\xEDsimas pa'l coraz\xF3n."
+    action: 
+    responses: []
+    goTo: 
+    endsDialogue: 0
+    sanityChange: 0
+    addClue: 
+    giveItem: 
+    eventName: 
+  - id: 
+    speaker: Persona jugando 2
+    text: "\xA1Esas son m\xEDas!... Lo que sea, \xBFs\xED le entras?"
+    action: 
+    responses:
+    - text: "S\xED"
+      goTo: si
+    - text: No
+      goTo: no
+    goTo: 
+    endsDialogue: 0
+    sanityChange: 0
+    addClue: 
+    giveItem: 
+    eventName: 
+  - id: si
+    speaker: Persona jugando 1
+    text: "\xA1JA! Por fin alguien con huevos en esta puta fiesta."
+    action: 
+    responses: []
+    goTo: 
+    endsDialogue: 1
+    sanityChange: 0
+    addClue: 
+    giveItem: 
+    eventName: jugar
+  - id: no
+    speaker: Persona jugando 1
+    text: Jueputa, tan sobrio.
+    action: 
+    responses: []
+    goTo: 
+    endsDialogue: 0
+    sanityChange: 0
+    addClue: pong_dijo_no
+    giveItem: 
+    eventName: 
+  - id: 
+    speaker: Persona jugando 2
+    text: "Si cambias de opini\xF3n probablemente no nos movamos de aqu\xED. Este
+      y yo hicimos una apuesta."
+    action: Rodando los ojos
+    responses: []
+    goTo: 
+    endsDialogue: 0
+    sanityChange: 0
+    addClue: 
+    giveItem: 
+    eventName: 
+  - id: 
+    speaker: Persona jugando 1
+    text: "\xBFA qui\xE9n le dices \"este\"...?"
+    action: 
+    responses: []
+    goTo: 
+    endsDialogue: 1
+    sanityChange: 0
+    addClue: 
+    giveItem: 
+    eventName: 

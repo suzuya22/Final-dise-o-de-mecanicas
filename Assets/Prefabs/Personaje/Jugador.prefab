@@ -17,6 +17,8 @@ GameObject:
   - component: {fileID: 5485202985739362991}
   - component: {fileID: 7744866235272619713}
   - component: {fileID: 2604910952984290244}
+  - component: {fileID: -6382528251451690096}
+  - component: {fileID: 8134890874994219354}
   m_Layer: 0
   m_Name: Jugador
   m_TagString: Untagged
@@ -191,6 +193,42 @@ MonoBehaviour:
   walkingParam: IsWalking
   runningParam: IsRunning
   speedParam: Speed
+--- !u!114 &-6382528251451690096
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 402764506413864979}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1af78a508a3505640b3ee1ba893659df, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ClueLog
+  initialClues: []
+  onClueAdded:
+    m_PersistentCalls:
+      m_Calls: []
+--- !u!114 &8134890874994219354
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 402764506413864979}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2d52c21c9bd4b8e4b80e579fd2169419, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SanityDrink
+  inventory: {fileID: 2023357200532295255}
+  sanity: {fileID: 6140809715695976624}
+  itemId: botella
+  restoreAmount: 30
+  drinkKey: 31
+  onDrink:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!1 &5104978557312467450
 GameObject:
   m_ObjectHideFlags: 0
